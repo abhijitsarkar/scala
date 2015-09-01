@@ -1,2 +1,2 @@
 # scala
-My Scala Projects
+My Scala projects
