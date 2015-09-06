@@ -1,0 +1,60 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>name.abhijitsarkar.maven.scala</groupId>
+		<artifactId>maven-scala-parent</artifactId>
+		<version>1.0</version>
+	</parent>
+
+	<groupId>name.abhijitsarkar</groupId>
+	<artifactId>user-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>user-service</name>
+
+	<properties>
+		<akka.version>2.3.12</akka.version>
+		<akka-stream.version>1.0</akka-stream.version>
+		<casbah.version>2.8.2</casbah.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-actor_2.11</artifactId>
+			<version>${akka.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-stream-experimental_2.11</artifactId>
+			<version>${akka-stream.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-http-core-experimental_2.11</artifactId>
+			<version>${akka-stream.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-http-experimental_2.11</artifactId>
+			<version>${akka-stream.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-http-spray-json-experimental_2.11</artifactId>
+			<version>${akka-stream.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>casbah-core_2.11</artifactId>
+			<version>${casbah.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-http-testkit-experimental_2.11</artifactId>
+			<version>${akka-stream.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>
