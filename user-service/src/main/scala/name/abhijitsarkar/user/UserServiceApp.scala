@@ -1,9 +1,8 @@
 package name.abhijitsarkar.user
 
-import com.mongodb.casbah.MongoClient
-import com.mongodb.casbah.commons.MongoDBObject
 import com.typesafe.config.ConfigFactory
 
+import MongoDBCollectionFactory.newCollection
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
@@ -18,7 +17,7 @@ object UserServiceApp extends App with UserService {
   override val config = ConfigFactory.load()
   override val logger = Logging(system, getClass)
 
-  private val collection = MongoClient()("akka")("users")
+  private val collection = newCollection("users")
   override val userRepository = new MongoDBUserRepository(collection) with UserBusinessDelegate
 
   Http().bindAndHandle(route, config.getString("http.interface"), config.getInt("http.port"))

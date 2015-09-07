@@ -53,9 +53,12 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
     val query = MongoDBObject(USER_ID -> user.userId)
     val dbObj = MongoDBUserRepository.userToDbObj(user)
 
-    val result = collection.update(query, dbObj, false, false, WriteConcern.Safe)
+    val result = Try(collection.update(query, dbObj, false, false, WriteConcern.Safe))
 
-    userIdOrNone(result, user.userId)
+    result match {
+      case Success(writeResult) => userIdOrNone(writeResult, user.userId)
+      case Failure(ex) => logger.error(s"Failed to update user: $user, error: ${ex.getMessage}"); None
+    }
   }
 
   private def userIdOrNone(result: WriteResult, userId: String) = {
@@ -69,7 +72,7 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
 
     result match {
       case Success(writeResult) => userIdOrNone(writeResult, user.userId)
-      case Failure(ex) => logger.error(s"Failed to insert user: $user", ex); None
+      case Failure(ex) => logger.error(s"Failed to create user: $user, error: ${ex.getMessage}"); None
     }
   }
 

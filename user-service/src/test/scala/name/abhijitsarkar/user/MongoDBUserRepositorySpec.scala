@@ -15,17 +15,12 @@ import com.mongodb.util.JSON
 import name.abhijitsarkar.user.MongoDBUserRepository.dbObjToUser
 import name.abhijitsarkar.user.domain.User
 import name.abhijitsarkar.user.domain.UserAttributes.PHONE_NUM
+import MongoDBCollectionFactory.newCollection
 
 class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with BeforeAndAfterAll {
-  private val collection = MongoClient()("akka")("users")
+  private val collection = newCollection("users")
 
-  collection.createIndex(MongoDBObject(PHONE_NUM.toString -> 1), MongoDBObject("unique" -> true))
-  
-  import MongoDBUserRepository._
-  
-  collection.indexInfo.foreach { index => println(s"Index: ${index.toMap}") }
-
-  private val userRepository = new MongoDBUserRepository(collection)
+  private val userRepository = new MongoDBUserRepository(newCollection("users"))
 
   private val testUser = User("1", "John", "Doe", "111-111-1111", None)
 
@@ -109,7 +104,7 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with Befo
 
     val user = users.head
 
-    val updatedUser = testUser.copy(userId = "2").copy(phoneNum = user.phoneNum)
+    val updatedUser = testUser.copy(userId = "2", phoneNum = user.phoneNum)
 
     updatedUser.phoneNum == user.phoneNum
 
@@ -117,9 +112,55 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with Befo
 
     newUserId shouldBe empty
   }
+  
+  "We" should "not be able to update users with duplicate phone numbers" in { userId =>
+    val newUser = testUser.copy(userId = "2", phoneNum = "222-222-2222")
+
+    val newUserId = userRepository.createUser(newUser)
+
+    newUserId should contain(newUser.userId)
+
+    val updatedUser = testUser.copy(phoneNum = "222-222-2222")
+
+    val updatedUserId = userRepository.updateUser(updatedUser)
+
+    updatedUserId shouldBe empty
+    
+    userRepository.deleteUser(newUserId.get) == newUserId
+  }
+
+  "We" should "not be able to create users with duplicate emails" in { userId =>
+    var newUser = testUser.copy(userId = "2", email = Some("abc@gmail.com"), phoneNum = "222-222-2222")
+
+    val newUserId = userRepository.createUser(newUser)
+
+    newUserId should contain(newUser.userId)
+
+    newUser = newUser.copy(userId = "3", phoneNum = "333-333-3333")
+
+    userRepository.createUser(newUser) shouldBe empty
+
+    userRepository.deleteUser(newUserId.get) == newUserId
+  }
+
+  "We" should "not be able to update users with duplicate emails" in { userId =>
+    val newUser = testUser.copy(userId = "2", email = Some("abc@gmail.com"), phoneNum = "222-222-2222")
+
+    val newUserId = userRepository.createUser(newUser)
+
+    newUserId should contain(newUser.userId)
+
+    val updatedUser = testUser.copy(email = Some("abc@gmail.com"))
+
+    val updatedUserId = userRepository.updateUser(updatedUser)
+
+    updatedUserId shouldBe empty
+    
+    userRepository.deleteUser(newUserId.get) == newUserId
+  }
 
   "We" should "be able to update user's email" in { userId =>
-    val updatedUser = testUser.copy(userId = userId).copy(email = Some("test@gmail.com"))
+    val updatedUser = testUser.copy(email = Some("test@gmail.com"))
 
     val updatedUserId = userRepository.updateUser(updatedUser)
 
