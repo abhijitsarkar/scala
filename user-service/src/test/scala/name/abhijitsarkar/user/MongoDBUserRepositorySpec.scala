@@ -1,46 +1,71 @@
 package name.abhijitsarkar.user
 
 import scala.io.Source
+
+import org.scalatest.BeforeAndAfter
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+import org.scalatest.fixture
+
 import com.mongodb.BasicDBObject
 import com.mongodb.casbah.MongoClient
+import com.mongodb.casbah.commons.MongoDBObject
 import com.mongodb.util.JSON
+
 import name.abhijitsarkar.user.MongoDBUserRepository.dbObjToUser
 import name.abhijitsarkar.user.domain.User
+import name.abhijitsarkar.user.domain.UserAttributes.PHONE_NUM
 
-class MongoDBUserRepositorySpec extends FlatSpec with Matchers with BeforeAndAfterAll {
+class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers {
   private val collection = MongoClient()("akka")("users")
-  private val userRepository = new MongoDBUserRepository(collection) with UserBusinessDelegate
+  
+  val index = MongoDBObject(PHONE_NUM.toString -> 1, "unique" -> true)
+  
+  collection.createIndex(index)
+  
+  collection.indexInfo.foreach { index => println(s"Index: ${index.toMap}") }
+  
+  private val userRepository = new MongoDBUserRepository(collection)
 
-  override def beforeAll = {
-    println("Initializing...")
-    userRepository.collection.drop()
+  private val testUser = User("1", "John", "Doe", "111-111-1111", None)
 
-    val users = Source.fromInputStream(getClass.getResourceAsStream("/users.json"))
+  type FixtureParam = String
 
-    for (line <- users.getLines) {
-      val userDBObj = JSON.parse(line).asInstanceOf[BasicDBObject]
+  def withFixture(test: OneArgTest) = {
+    collection.remove(MongoDBObject())
+    
+    val users = userRepository.findByFirstName("test")
 
-      val user = dbObjToUser(userDBObj)
+    users shouldBe empty
 
-      userRepository.createUser(user)
+    val newUserId = userRepository.createUser(testUser)
+
+    newUserId shouldBe defined
+    
+    println("Before test")
+    dumpAllDocs
+
+    try {
+      withFixture(test.toNoArgTest(newUserId.get)) // "loan" the fixture to the test
+    } finally { // clean up the fixture
+      println("After test")
+      dumpAllDocs
+      
+      collection.remove(MongoDBObject())
     }
   }
 
-  override def afterAll = {
-    println("Cleaning up...")
-    userRepository.collection.drop()
+  private def dumpAllDocs = {
+    collection.find().foreach { dbObj => println(dbObj.toMap) }
   }
 
-  "We" should "find user with first name John" in {
-    val users = userRepository.findByFirstName("John")
-    verifySingleUser(users, "John", "Doe")
+  "We" should "find user with first name" in { userId =>
+    val users = userRepository.findByFirstName(testUser.firstName)
+    verifySingleUser(users)
   }
 
-  private def verifySingleUser(users: Seq[User], expectedFirstName: String, expectedLastName: String) {
-    users.size shouldBe (1)
+  private def verifySingleUser(users: Seq[User], expectedFirstName: String = testUser.firstName, expectedLastName: String = testUser.lastName) {
+    users should have size (1)
 
     val user = users.head
 
@@ -48,69 +73,78 @@ class MongoDBUserRepositorySpec extends FlatSpec with Matchers with BeforeAndAft
     user.lastName shouldBe (expectedLastName)
   }
 
-  "We" should "find 2 users with last name Doe" in {
-    val users = userRepository.findByLastName("Doe")
-    users.size shouldBe (2)
+  "We" should "find user with last name" in { userId =>
+    val users = userRepository.findByLastName(testUser.lastName)
+    verifySingleUser(users)
   }
 
-  "Johnny" should "not have an email on file" in {
-    val users = userRepository.findByFirstName("Johnny")
-    verifySingleUser(users, "Johnny", "Appleseed")
+  "We" should "be able to create new user" in { userId =>
+    val newUser = User("", "test", "test", "555-555-9999", None)
 
-    users.head.email shouldBe empty
-  }
-
-  "Leading or trailing spaces" should "be trimmed during search" in {
-    val users = userRepository.findByFirstName(" John ")
-    verifySingleUser(users, "John", "Doe")
-  }
-
-  "We" should "be able to update user's phone number" in {
-    val newUser = User("", "test", "test", "555-555-5555", None)
-
-    val newUserId = userRepository.createUser(newUser).get
-    
-    val updatedUser = newUser.copy(userId = newUserId).copy(phoneNum = "555-555-6666")
-    
-    val updatedUserId = userRepository.updateUser(updatedUser).get
-    
-    updatedUserId == newUserId
+    val newUserId = userRepository.createUser(newUser)
     
     val users = userRepository.findByFirstName("test")
-    verifySingleUser(users, "Test", "Test")
-    
-    users.head.phoneNum shouldBe("555-555-6666")
-    
-    val deletedUserId = userRepository.deleteUser(updatedUserId).get
-    
-    deletedUserId == updatedUserId
+    verifySingleUser(users, "test", "test")
+
+    val deletedUserId = userRepository.deleteUser(newUserId.get)
+
+    deletedUserId == newUserId
   }
   
-  "We" should "not be able to update non existing user" in {
+  "We" should "not be able to create users with duplicate ids" in { userId =>
+    val users = userRepository.findByFirstName(testUser.firstName)
+    verifySingleUser(users)
+    
+    val newUserId = userRepository.createUser(testUser)
+
+    newUserId shouldBe empty
+  }
+
+  "We" should "not be able to create users with duplicate phone numbers" in { userId =>
+    val users = userRepository.findByFirstName(testUser.firstName)
+    verifySingleUser(users)
+    
+    val user = users.head
+    
+    val updatedUser = testUser.copy(userId = "2").copy(phoneNum = user.phoneNum)
+    
+    updatedUser.phoneNum == user.phoneNum
+    
+    val newUserId = userRepository.createUser(updatedUser)
+
+    newUserId shouldBe empty
+  }
+
+  "We" should "be able to update user's email" in { userId =>
+    val updatedUser = testUser.copy(userId = userId).copy(email = Some("test@gmail.com"))
+
+    val updatedUserId = userRepository.updateUser(updatedUser)
+
+    updatedUserId should contain(userId)
+
+    val users = userRepository.findByFirstName(testUser.firstName)
+    verifySingleUser(users)
+
+    users.head.email should contain("test@gmail.com")
+  }
+
+  "We" should "not be able to update non existing user" in { userId =>
     val user = new User("junk", "test", "test", "555-555-5555", None)
-    
+
     val userId = userRepository.updateUser(user)
-    
+
     userId shouldBe empty
   }
-  
-  "We" should "be able to delete user" in {
-    val newUser = User("", "test", "test", "555-555-5555", None)
 
-    val newUserId = userRepository.createUser(newUser).get
-    
-    val deletedUserId = userRepository.deleteUser(newUserId).get
-    
-    deletedUserId == newUserId
-    
-    val users = userRepository.findByFirstName("test")
-    
-    users.isEmpty == true
+  "We" should "be able to delete user" in { userId =>
+    val deletedUserId = userRepository.deleteUser(userId)
+
+    deletedUserId should contain(userId)
   }
-  
-  "We" should "not be able to delete non existing user" in {
+
+  "We" should "not be able to delete non existing user" in { userId =>
     val userId = userRepository.deleteUser("junk")
-    
+
     userId shouldBe empty
   }
 }

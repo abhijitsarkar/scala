@@ -3,18 +3,22 @@ package name.abhijitsarkar.user
 import com.mongodb.DBObject
 import com.mongodb.casbah.Imports.MongoClient
 import com.mongodb.casbah.Imports.MongoDBObject
-import name.abhijitsarkar.user.UserAttributes.EMAIL
-import name.abhijitsarkar.user.UserAttributes.FIRST_NAME
-import name.abhijitsarkar.user.UserAttributes.LAST_NAME
-import name.abhijitsarkar.user.UserAttributes.PHONE_NUM
-import name.abhijitsarkar.user.UserAttributes.ACTIVE
+
 import name.abhijitsarkar.user.domain.User
+import name.abhijitsarkar.user.domain.UserAttributes.ACTIVE;
+import name.abhijitsarkar.user.domain.UserAttributes.EMAIL;
+import name.abhijitsarkar.user.domain.UserAttributes.FIRST_NAME;
+import name.abhijitsarkar.user.domain.UserAttributes.LAST_NAME;
+import name.abhijitsarkar.user.domain.UserAttributes.PHONE_NUM;
+
 import com.mongodb.casbah.MongoCollection
 import java.util.UUID
 import com.mongodb.casbah.WriteConcern
 import com.mongodb.WriteResult
 
-class MongoDBUserRepository(private[user] val collection: MongoCollection) extends UserRepository {
+class MongoDBUserRepository(private val collection: MongoCollection) extends UserRepository {
+  import MongoDBUserRepository._
+  
   override def findByFirstName(firstName: String) = {
     val query = MongoDBObject(FIRST_NAME.toString -> firstName)
 
@@ -42,7 +46,7 @@ class MongoDBUserRepository(private[user] val collection: MongoCollection) exten
   }
 
   override def updateUser(user: User) = {
-    val query = MongoDBObject(MongoDBUserRepository.USER_ID -> user.userId)
+    val query = MongoDBObject(USER_ID -> user.userId)
     val dbObj = MongoDBUserRepository.userToDbObj(user)
 
     val result = collection.update(query, dbObj, false, false, WriteConcern.Safe)
@@ -62,9 +66,10 @@ class MongoDBUserRepository(private[user] val collection: MongoCollection) exten
   }
 
   override def deleteUser(userId: String) = {
-    val query = MongoDBObject(MongoDBUserRepository.USER_ID -> userId)
+    val query = MongoDBObject(USER_ID -> userId)
+    val dbObj = MongoDBObject(ACTIVE.toString -> false)
 
-    val result = collection.remove(query)
+    val result = collection.update(query, dbObj, false, false, WriteConcern.Safe)
     
     userIdOrNone(result, userId)
   }
