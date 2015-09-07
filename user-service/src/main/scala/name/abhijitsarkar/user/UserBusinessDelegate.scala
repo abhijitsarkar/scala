@@ -20,8 +20,8 @@ trait UserBusinessDelegate extends UserRepository {
     super.createUser(cleanseUser(user))
   }
 
-  abstract override def updateUser(userId: String, user: User) = {
-    super.updateUser(userId, cleanseUser(user))
+  abstract override def updateUser(user: User) = {
+    super.updateUser(cleanseUser(user))
   }
 
   abstract override def deleteUser(userId: String) = {

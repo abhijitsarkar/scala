@@ -41,20 +41,20 @@ class MongoDBUserRepository(private[user] val collection: MongoCollection) exten
     }.toSeq
   }
 
-  override def updateUser(userId: String, user: User) = {
-    val query = MongoDBObject(MongoDBUserRepository.USER_ID -> userId)
+  override def updateUser(user: User) = {
+    val query = MongoDBObject(MongoDBUserRepository.USER_ID -> user.userId)
     val dbObj = MongoDBUserRepository.userToDbObj(user)
 
     val result = collection.update(query, dbObj, false, false, WriteConcern.Safe)
     
-    userIdOrNone(result, userId)
+    userIdOrNone(result, user.userId)
   }
   
   private def userIdOrNone(result: WriteResult, userId: String) = {
     if (result.getN == 1) Some(userId) else None
   }
 
-  override def createUser(user: User): Option[String] = {
+  override def createUser(user: User) = {
     val dbObj = MongoDBUserRepository.userToDbObj(user)
     val result = collection.save(dbObj, WriteConcern.Safe)
 

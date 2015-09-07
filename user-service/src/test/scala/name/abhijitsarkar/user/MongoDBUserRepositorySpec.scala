@@ -72,7 +72,7 @@ class MongoDBUserRepositorySpec extends FlatSpec with Matchers with BeforeAndAft
     
     val updatedUser = newUser.copy(userId = newUserId).copy(phoneNum = "555-555-6666")
     
-    val updatedUserId = userRepository.updateUser(newUserId, updatedUser).get
+    val updatedUserId = userRepository.updateUser(updatedUser).get
     
     updatedUserId == newUserId
     
@@ -87,9 +87,9 @@ class MongoDBUserRepositorySpec extends FlatSpec with Matchers with BeforeAndAft
   }
   
   "We" should "not be able to update non existing user" in {
-    val user = new User("", "test", "test", "555-555-5555", None)
+    val user = new User("junk", "test", "test", "555-555-5555", None)
     
-    val userId = userRepository.updateUser("junk", user)
+    val userId = userRepository.updateUser(user)
     
     userId shouldBe empty
   }

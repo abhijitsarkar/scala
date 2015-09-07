@@ -12,7 +12,7 @@ trait UserRepository {
 
   def createUser(user: User): Option[String]
   
-  def updateUser(userId: String, user: User): Option[String]
+  def updateUser(user: User): Option[String]
   
   def deleteUser(userId: String): Option[String]
 }
