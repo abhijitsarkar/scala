@@ -16,24 +16,27 @@ import name.abhijitsarkar.user.MongoDBUserRepository.dbObjToUser
 import name.abhijitsarkar.user.domain.User
 import name.abhijitsarkar.user.domain.UserAttributes.PHONE_NUM
 
-class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers {
+class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with BeforeAndAfterAll {
   private val collection = MongoClient()("akka")("users")
+
+  collection.createIndex(MongoDBObject(PHONE_NUM.toString -> 1), MongoDBObject("unique" -> true))
   
-  val index = MongoDBObject(PHONE_NUM.toString -> 1, "unique" -> true)
-  
-  collection.createIndex(index)
+  import MongoDBUserRepository._
   
   collection.indexInfo.foreach { index => println(s"Index: ${index.toMap}") }
-  
+
   private val userRepository = new MongoDBUserRepository(collection)
 
   private val testUser = User("1", "John", "Doe", "111-111-1111", None)
 
+  override def afterAll() {
+    println("Cleaning up")
+    collection.drop
+  }
+
   type FixtureParam = String
 
   def withFixture(test: OneArgTest) = {
-    collection.remove(MongoDBObject())
-    
     val users = userRepository.findByFirstName("test")
 
     users shouldBe empty
@@ -41,7 +44,7 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers {
     val newUserId = userRepository.createUser(testUser)
 
     newUserId shouldBe defined
-    
+
     println("Before test")
     dumpAllDocs
 
@@ -50,7 +53,7 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers {
     } finally { // clean up the fixture
       println("After test")
       dumpAllDocs
-      
+
       collection.remove(MongoDBObject())
     }
   }
@@ -82,7 +85,7 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers {
     val newUser = User("", "test", "test", "555-555-9999", None)
 
     val newUserId = userRepository.createUser(newUser)
-    
+
     val users = userRepository.findByFirstName("test")
     verifySingleUser(users, "test", "test")
 
@@ -90,11 +93,11 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers {
 
     deletedUserId == newUserId
   }
-  
-  "We" should "not be able to create users with duplicate ids" in { userId =>
+
+  ignore should "not be able to create users with duplicate ids" in { userId =>
     val users = userRepository.findByFirstName(testUser.firstName)
     verifySingleUser(users)
-    
+
     val newUserId = userRepository.createUser(testUser)
 
     newUserId shouldBe empty
@@ -103,13 +106,13 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers {
   "We" should "not be able to create users with duplicate phone numbers" in { userId =>
     val users = userRepository.findByFirstName(testUser.firstName)
     verifySingleUser(users)
-    
+
     val user = users.head
-    
+
     val updatedUser = testUser.copy(userId = "2").copy(phoneNum = user.phoneNum)
-    
+
     updatedUser.phoneNum == user.phoneNum
-    
+
     val newUserId = userRepository.createUser(updatedUser)
 
     newUserId shouldBe empty

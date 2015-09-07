@@ -1,6 +1,5 @@
 package name.abhijitsarkar.user
 
-import com.mongodb.DBObject
 import name.abhijitsarkar.user.domain.User
 
 class MockUserRepository extends UserRepository {

@@ -3,22 +3,26 @@ package name.abhijitsarkar.user
 import com.mongodb.DBObject
 import com.mongodb.casbah.Imports.MongoClient
 import com.mongodb.casbah.Imports.MongoDBObject
-
 import name.abhijitsarkar.user.domain.User
-import name.abhijitsarkar.user.domain.UserAttributes.ACTIVE;
-import name.abhijitsarkar.user.domain.UserAttributes.EMAIL;
-import name.abhijitsarkar.user.domain.UserAttributes.FIRST_NAME;
-import name.abhijitsarkar.user.domain.UserAttributes.LAST_NAME;
-import name.abhijitsarkar.user.domain.UserAttributes.PHONE_NUM;
-
+import name.abhijitsarkar.user.domain.UserAttributes.ACTIVE
+import name.abhijitsarkar.user.domain.UserAttributes.EMAIL
+import name.abhijitsarkar.user.domain.UserAttributes.FIRST_NAME
+import name.abhijitsarkar.user.domain.UserAttributes.LAST_NAME
+import name.abhijitsarkar.user.domain.UserAttributes.PHONE_NUM
 import com.mongodb.casbah.MongoCollection
 import java.util.UUID
 import com.mongodb.casbah.WriteConcern
 import com.mongodb.WriteResult
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
+import org.slf4j.LoggerFactory
 
 class MongoDBUserRepository(private val collection: MongoCollection) extends UserRepository {
-  import MongoDBUserRepository._
+  private val logger = LoggerFactory.getLogger(getClass)
   
+  import MongoDBUserRepository._
+
   override def findByFirstName(firstName: String) = {
     val query = MongoDBObject(FIRST_NAME.toString -> firstName)
 
@@ -30,7 +34,7 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
 
     findAllActiveUsers(query)
   }
-  
+
   override def findByFirstAndLastName(firstName: String, lastName: String) = {
     val query = MongoDBObject(FIRST_NAME.toString -> firstName, LAST_NAME.toString -> lastName)
 
@@ -50,19 +54,23 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
     val dbObj = MongoDBUserRepository.userToDbObj(user)
 
     val result = collection.update(query, dbObj, false, false, WriteConcern.Safe)
-    
+
     userIdOrNone(result, user.userId)
   }
-  
+
   private def userIdOrNone(result: WriteResult, userId: String) = {
     if (result.getN == 1) Some(userId) else None
   }
 
   override def createUser(user: User) = {
     val dbObj = MongoDBUserRepository.userToDbObj(user)
-    val result = collection.save(dbObj, WriteConcern.Safe)
 
-    userIdOrNone(result, user.userId)
+    val result = Try(collection.save(dbObj, WriteConcern.Safe))
+
+    result match {
+      case Success(writeResult) => userIdOrNone(writeResult, user.userId)
+      case Failure(ex) => logger.error(s"Failed to insert user: $user", ex); None
+    }
   }
 
   override def deleteUser(userId: String) = {
@@ -70,13 +78,13 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
     val dbObj = MongoDBObject(ACTIVE.toString -> false)
 
     val result = collection.update(query, dbObj, false, false, WriteConcern.Safe)
-    
+
     userIdOrNone(result, userId)
   }
 }
 
 object MongoDBUserRepository {
-  private val USER_ID = "_id"
+  val USER_ID = "_id"
 
   def apply(collection: MongoCollection) = {
     new MongoDBUserRepository(collection)
