@@ -34,7 +34,7 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
     findAllMatchingUsers(query)
   }
 
-  override def findByFirstAndLastName(firstName: String, lastName: String) = {
+  override def findByFirstAndLastNames(firstName: String, lastName: String) = {
     val query = MongoDBObject(FIRST_NAME.toString -> firstName, LAST_NAME.toString -> lastName)
 
     findAllMatchingUsers(query)

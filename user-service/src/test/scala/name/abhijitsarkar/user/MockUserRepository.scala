@@ -13,7 +13,7 @@ class MockUserRepository extends UserRepository {
     if (lastName.equalsIgnoreCase(mockUser.lastName)) Seq[User](mockUser) else Seq.empty[User]
   }
 
-  override def findByFirstAndLastName(firstName: String, lastName: String): Seq[User] = {
+  override def findByFirstAndLastNames(firstName: String, lastName: String): Seq[User] = {
     if (firstName.equalsIgnoreCase(mockUser.firstName) && lastName.equalsIgnoreCase(mockUser.lastName))
       Seq[User](mockUser)
     else Seq.empty[User]

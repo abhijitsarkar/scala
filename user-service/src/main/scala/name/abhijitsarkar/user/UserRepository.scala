@@ -8,7 +8,7 @@ trait UserRepository {
 
   def findByLastName(lastName: String): Seq[User]
   
-  def findByFirstAndLastName(firstName: String, lastName: String): Seq[User]
+  def findByFirstAndLastNames(firstName: String, lastName: String): Seq[User]
 
   def createUser(user: User): Option[User]
   

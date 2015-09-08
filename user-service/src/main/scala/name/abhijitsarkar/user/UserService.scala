@@ -56,7 +56,7 @@ trait UserService {
         if (isFound(users)) Left(users) else Right(NotFound -> s"No users found with last name: $lastName.")
       }
       case Name(Some(firstName), Some(lastName)) => {
-        val users = userRepository.findByFirstAndLastName(firstName, lastName)
+        val users = userRepository.findByFirstAndLastNames(firstName, lastName)
         if (isFound(users)) Left(users) else Right(NotFound -> s"No users found with first name: $firstName and last name: $lastName.")
       }
       case _ => Right(BadRequest -> "One of first and last names is required.")

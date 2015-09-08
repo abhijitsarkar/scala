@@ -12,8 +12,8 @@ trait UserBusinessDelegate extends UserRepository {
     super.findByLastName(cleanse(lastName)).map { prettifyUser(_) }
   }
 
-  abstract override def findByFirstAndLastName(firstName: String, lastName: String) = {
-    super.findByFirstAndLastName(cleanse(firstName), cleanse(lastName)).map { prettifyUser(_) }
+  abstract override def findByFirstAndLastNames(firstName: String, lastName: String) = {
+    super.findByFirstAndLastNames(cleanse(firstName), cleanse(lastName)).map { (prettifyUser(_)) }
   }
 
   abstract override def createUser(user: User) = {
@@ -42,13 +42,13 @@ trait UserBusinessDelegate extends UserRepository {
     user.copy(firstName = firstName, lastName = lastName, phoneNum = phoneNum)
   }
 
-  private def prettifyPhoneNum(phoneNum: String) = {
+  private[user] def prettifyPhoneNum(phoneNum: String) = {
     val (areaCodeAndPrefix, lineNum) = phoneNum.splitAt(6)
 
     (areaCodeAndPrefix.splitAt(3).productIterator).mkString("-") + "-" + lineNum
   }
 
-  private def cleanseUser(user: User) = {
+  private[user] def cleanseUser(user: User) = {
     val userId = user.userId.map { cleanse }
 
     val firstName = cleanse(user.firstName)
@@ -61,13 +61,13 @@ trait UserBusinessDelegate extends UserRepository {
       email = email)
   }
 
-  private def cleanse(data: String) = {
+  private[user] def cleanse(data: String) = {
     require(isNotNullOrEmpty(data), "Null or empty data.")
 
     data.trim.toLowerCase
   }
 
-  private def cleansePhoneNum(phoneNum: String) = {
+  private[user] def cleansePhoneNum(phoneNum: String) = {
     val phone = cleanse(phoneNum).filterNot { c => (c == '-') || (c == '.') }
 
     require(phone.size == 10, "Phone number must be 10 digits.")
