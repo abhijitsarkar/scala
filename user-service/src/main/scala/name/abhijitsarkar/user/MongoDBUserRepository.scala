@@ -47,7 +47,7 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
   override def updateUser(user: User) = {
     val query = MongoDBObject(USER_ID -> new ObjectId(user.userId.get))
     val dbObj = userToDbObj(user)
-    
+
     val result = Try(collection.findAndModify(query = query, update = dbObj))
 
     processResult(result)
@@ -56,7 +56,8 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
   private def processResult(result: Try[Option[collection.T]]) = {
     result match {
       case Success(Some(dbObj)) => Some(dbObj).map { dbObjToUser(_) }
-      case Success(None) => logger.info(s"Didn't find user to update or delete."); None
+      case Success(None) =>
+        logger.info(s"Didn't find user to update or delete."); None
       case Failure(ex) => logger.error("Failed to update or delete user.", ex); None
     }
   }
@@ -65,20 +66,22 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
     val dbObj = userToDbObj(user)
 
     val result = Try(collection.insert(dbObj, WriteConcern.Safe))
+    
+    val newUser = user.copy(userId = Some(dbObj.get(USER_ID).toString))
 
     result match {
-      case Success(writeResult) if (writeResult.getN == 1) => Some(user)
+      case Success(writeResult) if (writeResult.getN == 1) => Some(newUser)
       case Success(writeResult) =>
-        logger.error(s"Failed to create user: ${dbObj.toMap}, write result: ${writeResult}."); None
+        logger.error(s"Failed to create user: ${newUser}, write result: ${writeResult}."); None
       case Failure(ex) => logger.error("Failed to create user.", ex); None
     }
   }
 
   override def deleteUser(userId: String) = {
     val query = MongoDBObject(USER_ID -> new ObjectId(userId))
-    
+
     val result = Try(collection.findAndRemove(query))
-    
+
     processResult(result)
   }
 }
@@ -108,10 +111,11 @@ object MongoDBUserRepository {
   private def userToDbObj(user: User) = {
     val builder = MongoDBObject.newBuilder
 
-    builder += (USER_ID -> (user.userId match {
-      case Some(userId) if (ObjectId.isValid(userId)) => logger.info("Using given user id."); new ObjectId(userId)
+    builder += USER_ID -> (user.userId match {
+      case Some(userId) if (ObjectId.isValid(userId)) =>
+        logger.info("Using given user id."); new ObjectId(userId)
       case _ => logger.info("Generating new user id."); new ObjectId()
-    }))
+    })
 
     builder += (FIRST_NAME.toString -> user.firstName,
       LAST_NAME.toString -> user.lastName,
