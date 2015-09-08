@@ -1,23 +1,26 @@
 package name.abhijitsarkar.user
 
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import org.bson.types.ObjectId
+import org.slf4j.LoggerFactory
+
 import com.mongodb.DBObject
-import com.mongodb.casbah.Imports.MongoClient
 import com.mongodb.casbah.Imports.MongoDBObject
+import com.mongodb.casbah.MongoCollection
+import com.mongodb.casbah.WriteConcern
+
+import MongoDBUserRepository.USER_ID
+import MongoDBUserRepository.dbObjToUser
+import MongoDBUserRepository.logger
+import MongoDBUserRepository.userToDbObj
 import name.abhijitsarkar.user.domain.User
-import name.abhijitsarkar.user.domain.UserAttributes.ACTIVE
 import name.abhijitsarkar.user.domain.UserAttributes.EMAIL
 import name.abhijitsarkar.user.domain.UserAttributes.FIRST_NAME
 import name.abhijitsarkar.user.domain.UserAttributes.LAST_NAME
 import name.abhijitsarkar.user.domain.UserAttributes.PHONE_NUM
-import com.mongodb.casbah.MongoCollection
-import java.util.UUID
-import com.mongodb.casbah.WriteConcern
-import com.mongodb.WriteResult
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
-import org.slf4j.LoggerFactory
-import org.bson.types.ObjectId
 
 class MongoDBUserRepository(private val collection: MongoCollection) extends UserRepository {
   import MongoDBUserRepository._
@@ -45,11 +48,12 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
   }
 
   override def updateUser(user: User) = {
-    val query = MongoDBObject(USER_ID -> new ObjectId(user.userId.get))
-    val dbObj = userToDbObj(user)
-
-    val result = Try(collection.findAndModify(query = query, update = dbObj))
-
+    val result = Try {
+      val query = MongoDBObject(USER_ID -> new ObjectId(user.userId.get))
+      val dbObj = userToDbObj(user)
+      collection.findAndModify(query = query, update = dbObj)
+    }
+    
     processResult(result)
   }
 
@@ -68,17 +72,16 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
     val newUser = user.copy(userId = Some(dbObj.get(USER_ID).toString))
 
     result match {
-      case Success(writeResult) if (writeResult.getN == 1) => Some(newUser)
-      case Success(writeResult) =>
-        logger.error(s"Failed to create user: ${newUser}, write result: ${writeResult}."); None
+      case Success(writeResult) => Some(newUser)
       case Failure(ex) => logger.error("Failed to create user.", ex); None
     }
   }
 
   override def deleteUser(userId: String) = {
-    val query = MongoDBObject(USER_ID -> new ObjectId(userId))
-
-    val result = Try(collection.findAndRemove(query))
+    val result = Try {
+      val query = MongoDBObject(USER_ID -> new ObjectId(userId))
+      collection.findAndRemove(query)
+    }
 
     processResult(result)
   }
