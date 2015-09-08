@@ -41,7 +41,7 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
   }
 
   private def findAllMatchingUsers(query: DBObject) = {
-    collection.find(query).map { dbObjToUser(_) }.toSeq
+    collection.find(query).map { dbObjToUser }.toSeq
   }
 
   override def updateUser(user: User) = {
@@ -55,9 +55,7 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
 
   private def processResult(result: Try[Option[collection.T]]) = {
     result match {
-      case Success(Some(dbObj)) => Some(dbObj).map { dbObjToUser(_) }
-      case Success(None) =>
-        logger.info(s"Didn't find user to update or delete."); None
+      case Success(x) => x.map { dbObjToUser }
       case Failure(ex) => logger.error("Failed to update or delete user.", ex); None
     }
   }
@@ -66,7 +64,7 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
     val dbObj = userToDbObj(user)
 
     val result = Try(collection.insert(dbObj, WriteConcern.Safe))
-    
+
     val newUser = user.copy(userId = Some(dbObj.get(USER_ID).toString))
 
     result match {

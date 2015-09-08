@@ -49,11 +49,16 @@ trait UserBusinessDelegate extends UserRepository {
   }
 
   private def cleanseUser(user: User) = {
+    val userId = user.userId.map { cleanse }
+
     val firstName = cleanse(user.firstName)
     val lastName = cleanse(user.lastName)
     val phoneNum = cleansePhoneNum(user.phoneNum)
 
-    user.copy(firstName = firstName, lastName = lastName, phoneNum = phoneNum, email = user.email.map { cleanse(_) })
+    val email = user.email.map { cleanse(_) }
+
+    user.copy(userId = userId, firstName = firstName, lastName = lastName, phoneNum = phoneNum,
+      email = email)
   }
 
   private def cleanse(data: String) = {
