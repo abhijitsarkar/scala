@@ -17,108 +17,109 @@ import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
 import org.slf4j.LoggerFactory
+import org.bson.types.ObjectId
 
 class MongoDBUserRepository(private val collection: MongoCollection) extends UserRepository {
-  private val logger = LoggerFactory.getLogger(getClass)
-  
   import MongoDBUserRepository._
 
   override def findByFirstName(firstName: String) = {
     val query = MongoDBObject(FIRST_NAME.toString -> firstName)
 
-    findAllActiveUsers(query)
+    findAllMatchingUsers(query)
   }
 
   override def findByLastName(lastName: String) = {
     val query = MongoDBObject(LAST_NAME.toString -> lastName)
 
-    findAllActiveUsers(query)
+    findAllMatchingUsers(query)
   }
 
   override def findByFirstAndLastName(firstName: String, lastName: String) = {
     val query = MongoDBObject(FIRST_NAME.toString -> firstName, LAST_NAME.toString -> lastName)
 
-    findAllActiveUsers(query)
+    findAllMatchingUsers(query)
   }
 
-  private def findAllActiveUsers(query: DBObject) = {
-    query.put(ACTIVE.toString, true)
-
-    collection.find(query).map {
-      MongoDBUserRepository.dbObjToUser(_)
-    }.toSeq
+  private def findAllMatchingUsers(query: DBObject) = {
+    collection.find(query).map { dbObjToUser(_) }.toSeq
   }
 
   override def updateUser(user: User) = {
-    val query = MongoDBObject(USER_ID -> user.userId)
-    val dbObj = MongoDBUserRepository.userToDbObj(user)
+    val query = MongoDBObject(USER_ID -> new ObjectId(user.userId.get))
+    val dbObj = userToDbObj(user)
+    
+    val result = Try(collection.findAndModify(query = query, update = dbObj))
 
-    val result = Try(collection.update(query, dbObj, false, false, WriteConcern.Safe))
+    processResult(result)
+  }
 
+  private def processResult(result: Try[Option[collection.T]]) = {
     result match {
-      case Success(writeResult) => userIdOrNone(writeResult, user.userId)
-      case Failure(ex) => logger.error(s"Failed to update user: $user, error: ${ex.getMessage}"); None
+      case Success(Some(dbObj)) => Some(dbObj).map { dbObjToUser(_) }
+      case Success(None) => logger.info(s"Didn't find user to update or delete."); None
+      case Failure(ex) => logger.error("Failed to update or delete user.", ex); None
     }
   }
 
-  private def userIdOrNone(result: WriteResult, userId: String) = {
-    if (result.getN == 1) Some(userId) else None
-  }
-
   override def createUser(user: User) = {
-    val dbObj = MongoDBUserRepository.userToDbObj(user)
+    val dbObj = userToDbObj(user)
 
-    val result = Try(collection.save(dbObj, WriteConcern.Safe))
+    val result = Try(collection.insert(dbObj, WriteConcern.Safe))
 
     result match {
-      case Success(writeResult) => userIdOrNone(writeResult, user.userId)
-      case Failure(ex) => logger.error(s"Failed to create user: $user, error: ${ex.getMessage}"); None
+      case Success(writeResult) if (writeResult.getN == 1) => Some(user)
+      case Success(writeResult) =>
+        logger.error(s"Failed to create user: ${dbObj.toMap}, write result: ${writeResult}."); None
+      case Failure(ex) => logger.error("Failed to create user.", ex); None
     }
   }
 
   override def deleteUser(userId: String) = {
-    val query = MongoDBObject(USER_ID -> userId)
-    val dbObj = MongoDBObject(ACTIVE.toString -> false)
-
-    val result = collection.update(query, dbObj, false, false, WriteConcern.Safe)
-
-    userIdOrNone(result, userId)
+    val query = MongoDBObject(USER_ID -> new ObjectId(userId))
+    
+    val result = Try(collection.findAndRemove(query))
+    
+    processResult(result)
   }
 }
 
 object MongoDBUserRepository {
+  private val logger = LoggerFactory.getLogger(getClass)
+
   val USER_ID = "_id"
 
   def apply(collection: MongoCollection) = {
     new MongoDBUserRepository(collection)
   }
 
-  private[user] def dbObjToUser(obj: DBObject) = {
+  private def dbObjToUser(obj: DBObject) = {
     val userId = obj.get(USER_ID).toString
     val firstName = obj.get(FIRST_NAME.toString).toString
     val lastName = obj.get(LAST_NAME.toString).toString
     val phoneNum = obj.get(PHONE_NUM.toString).toString
     val email = obj.get(EMAIL.toString) match {
       case x if x != null => Some(x.toString)
-      case x => None
+      case _ => None
     }
-    val active = obj.get(ACTIVE.toString).toString.toBoolean
 
-    User(userId, firstName, lastName, phoneNum, email, active)
+    User(Some(userId), firstName, lastName, phoneNum, email)
   }
 
-  private[user] def userToDbObj(user: User) = {
+  private def userToDbObj(user: User) = {
     val builder = MongoDBObject.newBuilder
 
-    builder += (USER_ID -> user.userId,
-      FIRST_NAME.toString -> user.firstName,
+    builder += (USER_ID -> (user.userId match {
+      case Some(userId) if (ObjectId.isValid(userId)) => logger.info("Using given user id."); new ObjectId(userId)
+      case _ => logger.info("Generating new user id."); new ObjectId()
+    }))
+
+    builder += (FIRST_NAME.toString -> user.firstName,
       LAST_NAME.toString -> user.lastName,
-      PHONE_NUM.toString -> user.phoneNum,
-      ACTIVE.toString -> user.active)
+      PHONE_NUM.toString -> user.phoneNum)
 
     user.email match {
       case Some(email) => builder += EMAIL.toString -> user.email.get
-      case None =>
+      case _ =>
     }
 
     builder.result

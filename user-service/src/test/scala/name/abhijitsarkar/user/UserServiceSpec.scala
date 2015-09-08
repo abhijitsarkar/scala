@@ -20,26 +20,26 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
 
   override val userRepository = new MockUserRepository
 
-  "User service" should "find a single user with first name John" in {
+  it should "find a single user with first name John" in {
     Get(s"/user?firstName=John") ~> route ~> check {
       status shouldBe OK
       contentType shouldBe(`application/json`)
       val users = responseAs[Seq[User]]
 
-      verifySingleUser(users, "John", "")
+      verifySingleUser(users)
     }
   }
 
-  private def verifySingleUser(users: Seq[User], expectedFirstName: String, expectedLastName: String) {
+  private def verifySingleUser(users: Seq[User]) {
     users.size shouldBe (1)
 
     val user = users.head
 
-    user.firstName shouldBe (expectedFirstName)
-    user.lastName shouldBe (expectedLastName)
+    user.firstName shouldBe ("John")
+    user.lastName shouldBe ("Doe")
   }
 
-  "User service" should "not find any users with first name Johnny" in {
+  it should "not find any users with first name Johnny" in {
     Get(s"/user?firstName=Johnny") ~> route ~> check {
       status shouldBe NotFound
       contentType shouldBe(`application/json`)
@@ -47,17 +47,17 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
     }
   }
 
-  "User service" should "find a single user with last name Doe" in {
+  it should "find a single user with last name Doe" in {
     Get(s"/user?lastName=Doe") ~> route ~> check {
       status shouldBe OK
       contentType shouldBe(`application/json`)
       val users = responseAs[Seq[User]]
 
-      verifySingleUser(users, "", "Doe")
+      verifySingleUser(users)
     }
   }
   
-  "User service" should "not find any users with last name Appleseed" in {
+  it should "not find any users with last name Appleseed" in {
     Get(s"/user?lastName=Appleseed") ~> route ~> check {
       status shouldBe NotFound
       contentType shouldBe(`application/json`)
@@ -65,17 +65,17 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
     }
   }
 
-  "User service" should "find a single user with first name John and last name Doe" in {
+  it should "find a single user with first name John and last name Doe" in {
     Get(s"/user?firstName=John&lastName=Doe") ~> route ~> check {
       status shouldBe OK
       contentType shouldBe(`application/json`)
       val users = responseAs[Seq[User]]
 
-      verifySingleUser(users, "John", "Doe")
+      verifySingleUser(users)
     }
   }
   
-  "User service" should "not find any users with first name Johnny and last name Appleseed" in {
+  it should "not find any users with first name Johnny and last name Appleseed" in {
     Get(s"/user?firstName=Johnny&lastName=Appleseed") ~> route ~> check {
       status shouldBe NotFound
       contentType shouldBe(`application/json`)
@@ -83,7 +83,7 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
     }
   }
 
-  "User service" should "throw exception if neither first nor last name is present" in {
+  it should "throw exception if neither first nor last name is present" in {
     Get(s"/user") ~> route ~> check {
       status shouldBe BadRequest
       contentType shouldBe(`application/json`)
@@ -91,8 +91,8 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
     }
   }
 
-  "User service" should "create new user and return the resource URI" in {
-    val user = User("1", "John", "Doe", "555-555-5555", None)
+  it should "create new user and return the resource URI" in {
+    val user = User(Some("1"), "John", "Doe", "555-555-5555", None)
 
     Put(s"/user", user) ~> route ~> check {
       status shouldBe Created
@@ -102,8 +102,8 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
     }
   }
   
-  "User service" should "not create new user" in {
-    val user = User("junk", "John", "Doe", "555-555-5555", None)
+  it should "not create new user" in {
+    val user = User(Some("junk"), "John", "Doe", "555-555-5555", None)
 
     Put(s"/user", user) ~> route ~> check {
       status shouldBe Conflict
@@ -112,8 +112,8 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
     }
   }
 
-  "User service" should "update existing user and return the user id" in {
-    val user = User("1", "John", "Doe", "555-555-5555", None)
+  it should "update existing user and return the user id" in {
+    val user = User(Some("1"), "John", "Doe", "555-555-5555", None)
 
     Post(s"/user", user) ~> route ~> check {
       status shouldBe OK
@@ -123,8 +123,8 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
     }
   }
   
-  "User service" should "not update non existing user" in {
-    val user = User("junk", "John", "Doe", "555-555-5555", None)
+  it should "not update non existing user" in {
+    val user = User(Some("junk"), "John", "Doe", "555-555-5555", None)
 
     Post(s"/user", user) ~> route ~> check {
       status shouldBe NotFound
@@ -133,7 +133,7 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
     }
   }
 
-  "User service" should "delete existing user and return the user id" in {
+  it should "delete existing user and return the user id" in {
     Delete(s"/user/1") ~> route ~> check {
       status shouldBe OK
       contentType shouldBe(`application/json`)
@@ -142,7 +142,7 @@ class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest wit
     }
   }
   
-  "User service" should "not delete non existing user" in {
+  it should "not delete non existing user" in {
     Delete(s"/user/junk") ~> route ~> check {
       status shouldBe NotFound
       contentType shouldBe(`application/json`)

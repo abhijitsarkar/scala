@@ -10,9 +10,9 @@ trait UserRepository {
   
   def findByFirstAndLastName(firstName: String, lastName: String): Seq[User]
 
-  def createUser(user: User): Option[String]
+  def createUser(user: User): Option[User]
   
-  def updateUser(user: User): Option[String]
+  def updateUser(user: User): Option[User]
   
-  def deleteUser(userId: String): Option[String]
+  def deleteUser(userId: String): Option[User]
 }

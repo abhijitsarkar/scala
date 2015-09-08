@@ -21,10 +21,12 @@ trait UserBusinessDelegate extends UserRepository {
   }
 
   abstract override def updateUser(user: User) = {
+    require(user.userId != None, "User id must be defined.")
     super.updateUser(cleanseUser(user))
   }
 
   abstract override def deleteUser(userId: String) = {
+    require(userId != null, "User id must not be null.")
     super.deleteUser(userId)
   }
 
@@ -37,7 +39,7 @@ trait UserBusinessDelegate extends UserRepository {
     val lastName = user.lastName.capitalize
     val phoneNum = prettifyPhoneNum(user.phoneNum)
 
-    new User(user.userId, firstName, lastName, phoneNum, user.email)
+    user.copy(firstName = firstName, lastName = lastName, phoneNum = phoneNum)
   }
 
   private def prettifyPhoneNum(phoneNum: String) = {
@@ -47,12 +49,11 @@ trait UserBusinessDelegate extends UserRepository {
   }
 
   private def cleanseUser(user: User) = {
-    val userId = if (isNotNullOrEmpty(user.userId)) user.userId else UUID.randomUUID.toString
     val firstName = cleanse(user.firstName)
     val lastName = cleanse(user.lastName)
     val phoneNum = cleansePhoneNum(user.phoneNum)
 
-    new User(userId, firstName, lastName, phoneNum, user.email.map { cleanse(_) })
+    user.copy(firstName = firstName, lastName = lastName, phoneNum = phoneNum, email = user.email.map { cleanse(_) })
   }
 
   private def cleanse(data: String) = {

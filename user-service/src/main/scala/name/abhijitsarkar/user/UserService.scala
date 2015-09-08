@@ -24,7 +24,7 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 
 object UserJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val createAndUpdateRequestFormat = jsonFormat6(User)
+  implicit val createAndUpdateRequestFormat = jsonFormat5(User)
 }
 
 trait UserService {
@@ -63,10 +63,10 @@ trait UserService {
     }
   }
 
-  def processDeleteOrUpdateResponse(userId: Option[String]) = {
-    userId match {
-      case Some(userId) => complete(OK, HttpEntity(`application/json`, userId))
-      case None => complete(NotFound, HttpEntity(`application/json`, s"No user found with id: $userId"))
+  def processDeleteOrUpdateResponse(user: Option[User]) = {
+    user match {
+      case Some(user) => complete(OK, HttpEntity(`application/json`, user.userId.get))
+      case None => complete(NotFound, HttpEntity(`application/json`, "No user found."))
     }
   }
 
@@ -87,23 +87,23 @@ trait UserService {
             val newUser = userRepository.createUser(user)
 
             newUser match {
-              case Some(userId) => {
+              case Some(user) => {
                 extractUri { requestUri =>
-                  complete(Created, HttpEntity(`application/json`, s"$requestUri/$userId"))
+                  complete(Created, HttpEntity(`application/json`, s"$requestUri/${user.userId.get}"))
                 }
               }
               case None => complete(Conflict, HttpEntity(`application/json`, s"Failed to create user with id: ${user.userId}."))
             }
           } ~
           (post & entity(as[User])) { user =>
-            val updatedUserId = userRepository.updateUser(user)
+            val updatedUser = userRepository.updateUser(user)
 
-            processDeleteOrUpdateResponse(updatedUserId)
+            processDeleteOrUpdateResponse(updatedUser)
           } ~
           (delete & path(Segment)) { userId =>
-            val deletedUserId = userRepository.deleteUser(userId)
+            val deletedUser = userRepository.deleteUser(userId)
 
-            processDeleteOrUpdateResponse(deletedUserId)
+            processDeleteOrUpdateResponse(deletedUser)
           }
       }
     }
