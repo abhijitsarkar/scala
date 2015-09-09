@@ -1,26 +1,19 @@
-package name.abhijitsarkar.user
+package name.abhijitsarkar.user.repository
 
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
-
 import com.mongodb.DBObject
-import com.mongodb.casbah.Imports.MongoDBObject
 import com.mongodb.casbah.MongoCollection
 import com.mongodb.casbah.WriteConcern
-
-import MongoDBUserRepository.USER_ID
-import MongoDBUserRepository.dbObjToUser
-import MongoDBUserRepository.logger
-import MongoDBUserRepository.userToDbObj
 import name.abhijitsarkar.user.domain.User
 import name.abhijitsarkar.user.domain.UserAttributes.EMAIL
 import name.abhijitsarkar.user.domain.UserAttributes.FIRST_NAME
 import name.abhijitsarkar.user.domain.UserAttributes.LAST_NAME
 import name.abhijitsarkar.user.domain.UserAttributes.PHONE_NUM
+import com.mongodb.casbah.commons.MongoDBObject
 
 class MongoDBUserRepository(private val collection: MongoCollection) extends UserRepository {
   import MongoDBUserRepository._

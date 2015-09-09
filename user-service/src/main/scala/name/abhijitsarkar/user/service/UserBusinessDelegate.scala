@@ -1,7 +1,7 @@
-package name.abhijitsarkar.user
+package name.abhijitsarkar.user.service
 
 import name.abhijitsarkar.user.domain.User
-import java.util.UUID
+import name.abhijitsarkar.user.repository.UserRepository
 
 trait UserBusinessDelegate extends UserRepository {
   abstract override def findByFirstName(firstName: String) = {

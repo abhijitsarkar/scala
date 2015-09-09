@@ -1,4 +1,4 @@
-package name.abhijitsarkar.user
+package name.abhijitsarkar.user.repository
 
 import name.abhijitsarkar.user.domain.User
 

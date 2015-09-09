@@ -1,7 +1,6 @@
-package name.abhijitsarkar.user
+package name.abhijitsarkar.user.repository
 
 import name.abhijitsarkar.user.domain.User
-import com.mongodb.casbah.MongoClient
 
 trait UserRepository {
   def findByFirstName(firstName: String): Seq[User]

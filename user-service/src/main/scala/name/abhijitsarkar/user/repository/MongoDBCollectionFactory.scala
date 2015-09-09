@@ -1,4 +1,4 @@
-package name.abhijitsarkar.user
+package name.abhijitsarkar.user.repository
 
 import com.mongodb.casbah.MongoClient
 import com.mongodb.casbah.commons.MongoDBObject

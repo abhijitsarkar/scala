@@ -1,4 +1,4 @@
-package name.abhijitsarkar.user
+package name.abhijitsarkar.user.service
 
 import scala.concurrent.ExecutionContextExecutor
 import com.typesafe.config.Config
@@ -22,6 +22,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import com.mongodb.casbah.MongoClient
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.MediaTypes.`application/json`
+import name.abhijitsarkar.user.repository.UserRepository
 
 object UserJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val createAndUpdateRequestFormat = jsonFormat5(User)

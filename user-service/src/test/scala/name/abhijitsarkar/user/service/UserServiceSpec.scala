@@ -1,4 +1,4 @@
-package name.abhijitsarkar.user
+package name.abhijitsarkar.user.service
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
@@ -11,7 +11,8 @@ import akka.http.scaladsl.model.StatusCodes.Conflict
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import name.abhijitsarkar.user.domain.User
 import UserJsonSupport._
-import TestUtil._
+import name.abhijitsarkar.user.TestUtil._
+import name.abhijitsarkar.user.repository.MockUserRepository
 import akka.http.scaladsl.model.ContentTypes.`application/json`
 
 class UserServiceSpec extends FlatSpec with Matchers with ScalatestRouteTest with UserService {

@@ -1,8 +1,9 @@
-package name.abhijitsarkar.user
+package name.abhijitsarkar.user.service
 
 import org.scalatest.Matchers
 import org.scalatest.FlatSpec
-import TestUtil._
+import name.abhijitsarkar.user.TestUtil._
+import name.abhijitsarkar.user.repository.MockUserRepository
 
 class UserBusinessDelegateSpec extends FlatSpec with Matchers {
   val userRepository = new MockUserRepository with UserBusinessDelegate

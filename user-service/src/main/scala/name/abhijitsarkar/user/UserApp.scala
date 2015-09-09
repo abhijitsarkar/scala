@@ -1,13 +1,15 @@
 package name.abhijitsarkar.user
 
 import com.typesafe.config.ConfigFactory
-
-import MongoDBCollectionFactory.newCollection
+import repository.MongoDBCollectionFactory.newCollection
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.RouteResult.route2HandlerFlow
 import akka.stream.ActorMaterializer
+import name.abhijitsarkar.user.repository.MongoDBUserRepository
+import name.abhijitsarkar.user.service.UserBusinessDelegate
+import name.abhijitsarkar.user.service.UserService
 
 object UserApp extends App with UserService {
   override implicit val system = ActorSystem()

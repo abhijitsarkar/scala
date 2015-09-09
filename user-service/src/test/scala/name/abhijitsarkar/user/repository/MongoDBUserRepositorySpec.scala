@@ -2,12 +2,14 @@ package name.abhijitsarkar.user
 
 import org.scalatest.Matchers
 import org.scalatest.fixture
-import MongoDBCollectionFactory.newCollection
+import name.abhijitsarkar.user.repository.MongoDBCollectionFactory.newCollection
 import TestUtil.verifySingleUser
 import name.abhijitsarkar.user.domain.User
 import org.bson.types.ObjectId
 import com.mongodb.casbah.commons.MongoDBObject
 import org.scalatest.BeforeAndAfterAll
+import name.abhijitsarkar.user.repository.MongoDBCollectionFactory
+import name.abhijitsarkar.user.repository.MongoDBUserRepository
 
 class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with BeforeAndAfterAll {
   private val collection = newCollection("test")

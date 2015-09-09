@@ -15,6 +15,9 @@
 
 	<properties>
 		<casbah.version>2.8.2</casbah.version>
+		<slick.version>3.0.2</slick.version>
+		<mysql-driver.version>5.1.36</mysql-driver.version>
+		<tomcat-jdbc.version>8.0.26</tomcat-jdbc.version>
 	</properties>
 
 	<dependencies>
@@ -51,6 +54,22 @@
 			<groupId>org.mongodb</groupId>
 			<artifactId>casbah-core_2.11</artifactId>
 			<version>${casbah.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.slick</groupId>
+			<artifactId>slick_2.11</artifactId>
+			<version>${slick.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>${mysql-driver.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jdbc</artifactId>
+			<version>${tomcat-jdbc.version}</version>
 		</dependency>
 	</dependencies>
 </project>
