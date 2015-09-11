@@ -1,7 +1,11 @@
 package name.abhijitsarkar.user
 
-import name.abhijitsarkar.user.domain.User
+import scala.collection.immutable.Seq
+
 import org.scalatest.Matchers
+
+import akka.http.scaladsl.model.headers.Accept
+import name.abhijitsarkar.user.domain.User
 
 object TestUtil extends Matchers {
   def verifySingleUser(users: Seq[User], expectedFirstName: String = "John", expectedLastName: String = "Doe") {
@@ -11,5 +15,9 @@ object TestUtil extends Matchers {
 
     user.firstName shouldBe (expectedFirstName)
     user.lastName shouldBe (expectedLastName)
+  }
+
+  def acceptHeader() = {
+    Accept.parseFromValueString("application/json").right.get
   }
 }

@@ -4,8 +4,8 @@ import slick.driver.MySQLDriver.simple._
 import name.abhijitsarkar.user.domain.User
 import slick.lifted.ProvenShape
 
-class UserTable(tag: Tag) extends Table[User](tag, "USER") {
-  def userId = column[String]("USER_ID", O.PrimaryKey, O.AutoInc)
+class Users(tag: Tag) extends Table[User](tag, "USER") {
+  def userId = column[String]("USER_ID", O.PrimaryKey)
   def firstName = column[String]("FIRST_NAME")
   def lastName = column[String]("LAST_NAME")
   def phoneNum = column[String]("PHONE_NUM")

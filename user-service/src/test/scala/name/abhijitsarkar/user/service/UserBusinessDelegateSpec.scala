@@ -1,47 +1,63 @@
 package name.abhijitsarkar.user.service
 
-import org.scalatest.Matchers
+import scala.collection.immutable.Seq
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+
 import org.scalatest.FlatSpec
-import name.abhijitsarkar.user.TestUtil._
+import org.scalatest.Matchers
+
+import akka.util.Timeout
+import name.abhijitsarkar.user.TestUtil.verifySingleUser
+import name.abhijitsarkar.user.domain.User
 import name.abhijitsarkar.user.repository.MockUserRepository
 
 class UserBusinessDelegateSpec extends FlatSpec with Matchers {
   val userRepository = new MockUserRepository with UserBusinessDelegate
+  
+  implicit val timeout = Timeout(1 seconds)
+  
+  private def waitAndThenVerify(future: Future[Seq[User]]) = {
+    val users = Await.result(future, timeout.duration).asInstanceOf[Seq[User]]
+    
+    verifySingleUser(users)
+  }
 
   it should "trim leading and trailing spaces from first name search" in {
-    val users = userRepository.findByFirstName(" john ")
-
-    verifySingleUser(users)
+    val future = userRepository.findByFirstName(" john ")
+    
+    waitAndThenVerify(future)
   }
 
   it should "trim leading and trailing spaces from last name search" in {
-    val users = userRepository.findByLastName(" doe ")
+    val future =  userRepository.findByLastName(" doe ")
 
-    verifySingleUser(users)
+    waitAndThenVerify(future)
   }
 
   it should "trim leading and trailing spaces from first and last names search" in {
-    val users = userRepository.findByFirstAndLastNames(" john ", " doe ")
+    val future = userRepository.findByFirstAndLastNames(" john ", " doe ")
 
-    verifySingleUser(users)
+    waitAndThenVerify(future)
   }
 
   it should "camel case results of first name search" in {
-    val users = userRepository.findByFirstName("john")
+    val future = userRepository.findByFirstName("john")
 
-    verifySingleUser(users)
+    waitAndThenVerify(future)
   }
 
   it should "camel case results of last name search" in {
-    val users = userRepository.findByLastName("doe")
+    val future = userRepository.findByLastName("doe")
 
-    verifySingleUser(users)
+    waitAndThenVerify(future)
   }
 
   it should "camel case results of first and last names search" in {
-    val users = userRepository.findByFirstAndLastNames(" john ", " doe ")
+    val future = userRepository.findByFirstAndLastNames(" john ", " doe ")
 
-    verifySingleUser(users)
+    waitAndThenVerify(future)
   }
 
   it should "prettify phone number" in {

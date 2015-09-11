@@ -14,33 +14,34 @@ import name.abhijitsarkar.user.domain.UserAttributes.FIRST_NAME
 import name.abhijitsarkar.user.domain.UserAttributes.LAST_NAME
 import name.abhijitsarkar.user.domain.UserAttributes.PHONE_NUM
 import com.mongodb.casbah.commons.MongoDBObject
+import scala.collection._
 
-class MongoDBUserRepository(private val collection: MongoCollection) extends UserRepository {
+class MongoDBUserRepository(private val collection: MongoCollection) {
   import MongoDBUserRepository._
 
-  override def findByFirstName(firstName: String) = {
+  def findByFirstName(firstName: String) = {
     val query = MongoDBObject(FIRST_NAME.toString -> firstName)
 
     findAllMatchingUsers(query)
   }
 
-  override def findByLastName(lastName: String) = {
+  def findByLastName(lastName: String) = {
     val query = MongoDBObject(LAST_NAME.toString -> lastName)
 
     findAllMatchingUsers(query)
   }
 
-  override def findByFirstAndLastNames(firstName: String, lastName: String) = {
+  def findByFirstAndLastNames(firstName: String, lastName: String) = {
     val query = MongoDBObject(FIRST_NAME.toString -> firstName, LAST_NAME.toString -> lastName)
 
     findAllMatchingUsers(query)
   }
 
   private def findAllMatchingUsers(query: DBObject) = {
-    collection.find(query).map { dbObjToUser }.toSeq
+    collection.find(query).map { dbObjToUser }.toList
   }
 
-  override def updateUser(user: User) = {
+  def updateUser(user: User) = {
     val result = Try {
       val query = MongoDBObject(USER_ID -> new ObjectId(user.userId.get))
       val dbObj = userToDbObj(user)
@@ -57,7 +58,7 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
     }
   }
 
-  override def createUser(user: User) = {
+  def createUser(user: User) = {
     val dbObj = userToDbObj(user)
 
     val result = Try(collection.insert(dbObj, WriteConcern.Safe))
@@ -70,7 +71,7 @@ class MongoDBUserRepository(private val collection: MongoCollection) extends Use
     }
   }
 
-  override def deleteUser(userId: String) = {
+  def deleteUser(userId: String) = {
     val result = Try {
       val query = MongoDBObject(USER_ID -> new ObjectId(userId))
       collection.findAndRemove(query)

@@ -1,19 +1,21 @@
 package name.abhijitsarkar.user.service
 
-import name.abhijitsarkar.user.domain.User
-import name.abhijitsarkar.user.repository.UserRepository
+import scala.collection.immutable.Seq
+import scala.concurrent.ExecutionContext.Implicits.global
 
-trait UserBusinessDelegate extends UserRepository {
+import name.abhijitsarkar.user.domain.User
+
+trait UserBusinessDelegate extends UserService {
   abstract override def findByFirstName(firstName: String) = {
-    super.findByFirstName(cleanse(firstName)).map { prettifyUser(_) }
+    super.findByFirstName(cleanse(firstName)).map { prettifyUsers }
   }
 
   abstract override def findByLastName(lastName: String) = {
-    super.findByLastName(cleanse(lastName)).map { prettifyUser(_) }
+    super.findByLastName(cleanse(lastName)).map { prettifyUsers }
   }
 
   abstract override def findByFirstAndLastNames(firstName: String, lastName: String) = {
-    super.findByFirstAndLastNames(cleanse(firstName), cleanse(lastName)).map { (prettifyUser(_)) }
+    super.findByFirstAndLastNames(cleanse(firstName), cleanse(lastName)).map { prettifyUsers }
   }
 
   abstract override def createUser(user: User) = {
@@ -34,12 +36,14 @@ trait UserBusinessDelegate extends UserRepository {
     input != null && !input.trim.isEmpty
   }
 
-  private def prettifyUser(user: User) = {
-    val firstName = user.firstName.capitalize
-    val lastName = user.lastName.capitalize
-    val phoneNum = prettifyPhoneNum(user.phoneNum)
+  private def prettifyUsers(users: Seq[User]) = {
+    users.map { user =>
+      val firstName = user.firstName.capitalize
+      val lastName = user.lastName.capitalize
+      val phoneNum = prettifyPhoneNum(user.phoneNum)
 
-    user.copy(firstName = firstName, lastName = lastName, phoneNum = phoneNum)
+      user.copy(firstName = firstName, lastName = lastName, phoneNum = phoneNum)
+    }
   }
 
   private[user] def prettifyPhoneNum(phoneNum: String) = {
