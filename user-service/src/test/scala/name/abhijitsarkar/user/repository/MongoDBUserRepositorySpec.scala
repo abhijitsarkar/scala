@@ -3,7 +3,7 @@ package name.abhijitsarkar.user
 import org.scalatest.Matchers
 import org.scalatest.fixture
 import name.abhijitsarkar.user.repository.MongoDBCollectionFactory.newCollection
-import TestUtil.verifySingleUser
+import name.abhijitsarkar.user.TestUtil.verifySingleUser
 import name.abhijitsarkar.user.domain.User
 import org.bson.types.ObjectId
 import com.mongodb.casbah.commons.MongoDBObject
@@ -30,14 +30,14 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with Befo
     newUser shouldBe defined
 
     println("Before test")
-    dumpAllDocs
+    dumpAllUsers
 
     try {
       println("Running test")
       withFixture(test.toNoArgTest(newUser.get)) // "loan" the fixture to the test
     } finally { // clean up the fixture
       println("After test")
-      dumpAllDocs
+      dumpAllUsers
 
       collection.remove(MongoDBObject.empty)
     }
@@ -48,7 +48,7 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with Befo
     collection.drop
   }
 
-  private def dumpAllDocs = {
+  private def dumpAllUsers = {
     collection.find().foreach { dbObj => println(dbObj.toMap) }
   }
 
@@ -150,9 +150,9 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with Befo
   it should "not be able to update non existing user" in { testUser =>
     val user = new User(Some(new ObjectId().toString), "test", "test", "555-555-5555", None)
 
-    val userId = userRepository.updateUser(user)
+    val updatedUser = userRepository.updateUser(user)
 
-    userId shouldBe empty
+    updatedUser shouldBe empty
   }
 
   it should "be able to delete user" in { testUser =>

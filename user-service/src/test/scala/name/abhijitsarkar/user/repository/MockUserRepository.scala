@@ -1,13 +1,13 @@
 package name.abhijitsarkar.user.repository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import name.abhijitsarkar.user.domain.User
 import name.abhijitsarkar.user.service.UserService
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContextExecutor, Future }
 import name.abhijitsarkar.user.ActorPlumbing
 import scala.collection.immutable.Seq
 
-class MockUserRepository extends UserService {
+class MockUserRepository(implicit val executor: ExecutionContextExecutor) extends UserService {
+  
   private val mockUser = User(Some("1"), "John", "Doe", "555-555-5555", Some("johndoe@gmail.com"))
 
   private def toFuture[A](anything: A) = {

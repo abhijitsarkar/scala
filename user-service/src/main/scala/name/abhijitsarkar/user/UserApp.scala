@@ -13,18 +13,22 @@ import name.abhijitsarkar.user.service.UserBusinessDelegate
 import repository.MongoDBCollectionFactory.newCollection
 import name.abhijitsarkar.user.service.UserService
 import name.abhijitsarkar.user.service.UserBusinessDelegate
+import scala.concurrent.ExecutionContextExecutor
 
-object UserApp extends App with UserReadResource with UserWriteResource {
+object UserApp extends App with UserReadResource with UserWriteResource with ActorPlumbing {
   override implicit val system = ActorSystem()
   override implicit def executor = system.dispatcher
   override implicit val materializer = ActorMaterializer()
 
   override def config = ConfigFactory.load()
   override val logger = Logging(system, getClass)
-
+  
   private val collection = newCollection("users")
   val userRepository = new MongoDBUserRepository(collection)
-  val userService: UserService = new MongoDBUserRepositoryAdapter(materializer, userRepository) with UserBusinessDelegate
+  val userService: UserService = new MongoDBUserRepositoryAdapter(userRepository) with UserBusinessDelegate { 
+    // implicitly finds the executor in scope. Ain't that cute?
+    override implicit def executor = implicitly
+  } 
 
   Http().bindAndHandle(readRoute ~ writeRoute, config.getString("http.interface"), config.getInt("http.port"))
 }

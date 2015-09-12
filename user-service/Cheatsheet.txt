@@ -5,11 +5,11 @@ Change MySql directory permission
 CREATE SCHEMA `akka` DEFAULT CHARACTER SET utf8 ;
 
 CREATE TABLE `akka`.`users` (
-  `user_id` INT NOT NULL AUTO_INCREMENT COMMENT '',
-  `first_name` VARCHAR(50) NOT NULL COMMENT '',
-  `last_name` VARCHAR(50) NOT NULL COMMENT '',
-  `phone_num` VARCHAR(25) NOT NULL COMMENT '',
-  `email` VARCHAR(50) NULL COMMENT '',
-  PRIMARY KEY (`user_id`)  COMMENT '',
-  UNIQUE INDEX `phone_num_UNIQUE` (`phone_num` ASC)  COMMENT '',
-  UNIQUE INDEX `email_UNIQUE` (`email` ASC)  COMMENT '');
+  `user_id` VARCHAR(16) NOT NULL,
+  `first_name` VARCHAR(50) NOT NULL,
+  `last_name` VARCHAR(50) NOT NULL,
+  `phone_num` VARCHAR(25) NOT NULL,
+  `email` VARCHAR(50) NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE INDEX `phone_num_UNIQUE` (`phone_num` ASC),
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC));

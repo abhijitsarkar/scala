@@ -3,7 +3,6 @@ package name.abhijitsarkar.user
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import scala.concurrent.ExecutionContextExecutor
-import scala.concurrent.ExecutionContext.Implicits.global
 import com.typesafe.config.Config
 import akka.event.LoggingAdapter
 

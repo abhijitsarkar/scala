@@ -1,11 +1,12 @@
 package name.abhijitsarkar.user.service
 
 import scala.collection.immutable.Seq
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import name.abhijitsarkar.user.domain.User
+import scala.concurrent.ExecutionContextExecutor
 
 trait UserBusinessDelegate extends UserService {
+  implicit def executor: ExecutionContextExecutor
+  
   abstract override def findByFirstName(firstName: String) = {
     super.findByFirstName(cleanse(firstName)).map { prettifyUsers }
   }

@@ -8,7 +8,7 @@ import name.abhijitsarkar.user.domain.User
 import name.abhijitsarkar.user.service.UserService
 import akka.stream.Materializer
 
-class MongoDBUserRepositoryAdapter(private val materializer: Materializer, private val userRepository: MongoDBUserRepository) extends UserService {
+class MongoDBUserRepositoryAdapter(private val userRepository: MongoDBUserRepository)(private implicit val materializer: Materializer) extends UserService {
   override def findByFirstName(firstName: String) = {
     val users = userRepository.findByFirstName(firstName)
 
@@ -49,13 +49,13 @@ class MongoDBUserRepositoryAdapter(private val materializer: Materializer, priva
     val src = Source.single(user)
     val sink = Sink.head[Option[User]]
 
-    src.runWith(sink)(materializer)
+    src.runWith(sink)
   }
 
   private def transform(users: Seq[User]) = {
     val src = Source(users)
     val sink = Sink.fold[Seq[User], User](Seq.empty)(_ :+ _)
 
-    src.runWith(sink)(materializer)
+    src.runWith(sink)
   }
 }
