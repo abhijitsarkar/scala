@@ -1,50 +1,135 @@
 package name.abhijitsarkar.user.service
 
 import scala.collection.immutable.Seq
+import scala.concurrent._
+import akka.actor.Actor
+import akka.actor.ActorLogging
 import name.abhijitsarkar.user.domain.User
-import scala.concurrent.ExecutionContextExecutor
+import name.abhijitsarkar.user.service.UserService._
+import akka.http.scaladsl.model.StatusCode
+import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model._
+import akka.actor.Props
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
+import akka.stream.actor.ActorPublisher
+import scala.annotation.tailrec
+import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
 
-trait UserBusinessDelegate extends UserService {
-  implicit def executor: ExecutionContextExecutor
-  
-  abstract override def findByFirstName(firstName: String) = {
-    super.findByFirstName(cleanse(firstName)).map { prettifyUsers }
+class UserBusinessDelegate(private val userService: UserService)(private implicit val executor: ExecutionContextExecutor)
+    extends ActorPublisher[Future[UserServiceResponse]] with ActorLogging {
+  val maxBufferSize = 100
+  var buff = Vector.empty[Future[UserServiceResponse]]
+
+  override def postStop() {
+    log.info(s"Stopping ${getClass.getName}")
+
+    // Supervisory strategy defined by UserServiceSupervisoryStrategyConfigurator and configured in application.conf
+    sender ! Future.successful(BadRequest)
   }
 
-  abstract override def findByLastName(lastName: String) = {
-    super.findByLastName(cleanse(lastName)).map { prettifyUsers }
+  def processFindByNameResults(results: Seq[User]) = {
+    results match {
+      case Nil => FindByNameResponse(NotFound, Seq.empty[User])
+      case _ => FindByNameResponse(OK, results)
+    }
   }
 
-  abstract override def findByFirstAndLastNames(firstName: String, lastName: String) = {
-    super.findByFirstAndLastNames(cleanse(firstName), cleanse(lastName)).map { prettifyUsers }
+  def isBufferFull = (buff.size == maxBufferSize)
+
+  def isBufferEmpty = (buff.size == 0)
+
+  def process(response: Future[UserServiceResponse]) = {
+    sender ! Future.successful(Accepted)
+
+    buff :+= response
+
+    deliver
   }
 
-  abstract override def createUser(user: User) = {
-    super.createUser(cleanseUser(user))
+  @tailrec final def deliver: Unit = {
+     println(s"totalDemand: $totalDemand, isActive: $isActive, buffer empty: ${isBufferEmpty}, buff: $buff")
+    
+    if (totalDemand > 0 && isActive && !isBufferEmpty) {
+      val (use, keep) = buff.splitAt(totalDemand.toInt)
+      buff = keep
+      
+      use foreach { item => println(item); onNext(item) }
+      deliver
+    }
   }
 
-  abstract override def updateUser(user: User) = {
-    require(user.userId != None, "User id must be defined.")
-    super.updateUser(cleanseUser(user))
+  def receive = {
+    case _ if (isBufferFull) => sender ! Future.failed(new StackOverflowError)
+
+    case FindByNameRequest(Some(firstName), None) => {
+      val cleansedFirstName = cleanse(firstName)
+
+      val future = userService.findByFirstName(cleansedFirstName).map { prettifyUsers }
+
+      process(future.map { processFindByNameResults(_) })
+    }
+
+    case FindByNameRequest(None, Some(lastName)) => {
+      val cleansedLastName = cleanse(lastName)
+
+      val future = userService.findByLastName(cleanse(cleansedLastName)).map { prettifyUsers }
+
+      process(future.map { processFindByNameResults(_) })
+    }
+
+    case FindByNameRequest(Some(firstName), Some(lastName)) => {
+      val cleansedFirstName = cleanse(firstName)
+      val cleansedLastName = cleanse(lastName)
+
+      val future = userService.findByFirstAndLastNames(cleansedFirstName, cleansedLastName).map { prettifyUsers }
+
+      process(future.map { processFindByNameResults(_) })
+    }
+
+    case FindByNameRequest(_, _) => sender ! process(Future.successful(FindByNameResponse(StatusCodes.BadRequest, Seq.empty[User])))
+
+    case UserUpdateRequest(user) => process(userService.updateUser(cleanseUser(user)).map {
+      userModificationResponseWithStatusCode(_, NotFound)
+    })
+
+    case UserCreateRequest(user) => process(userService.createUser(cleanseUser(user)).map {
+      userModificationResponseWithStatusCode(_, Conflict, Created)
+    })
+
+    case UserDeleteRequest(userId) => process(userService.deleteUser(cleanse(userId)).map {
+      userModificationResponseWithStatusCode(_, NotFound)
+    })
+
+    case Request(_) => deliver
+    case Cancel => context.stop(self)
   }
 
-  abstract override def deleteUser(userId: String) = {
-    require(userId != null, "User id must not be null.")
-    super.deleteUser(userId)
+  private[user] def userModificationResponseWithStatusCode(user: Option[User], failureStatus: StatusCode,
+    successStatus: StatusCode = OK) = {
+    UserModificationResponse(
+      statusCode = user match {
+        case Some(user) => successStatus
+        case _ => failureStatus
+      },
+      body = user.map { prettifyUser })
   }
 
-  def isNotNullOrEmpty(input: String) = {
+  private[user] def isNotNullOrEmpty(input: String) = {
     input != null && !input.trim.isEmpty
   }
 
-  private def prettifyUsers(users: Seq[User]) = {
-    users.map { user =>
-      val firstName = user.firstName.capitalize
-      val lastName = user.lastName.capitalize
-      val phoneNum = prettifyPhoneNum(user.phoneNum)
+  private[user] def prettifyUsers(users: Seq[User]) = {
+    users.map { prettifyUser }
+  }
 
-      user.copy(firstName = firstName, lastName = lastName, phoneNum = phoneNum)
-    }
+  private[user] def prettifyUser(user: User) = {
+    val firstName = user.firstName.capitalize
+    val lastName = user.lastName.capitalize
+    val phoneNum = prettifyPhoneNum(user.phoneNum)
+
+    user.copy(firstName = firstName, lastName = lastName, phoneNum = phoneNum)
   }
 
   private[user] def prettifyPhoneNum(phoneNum: String) = {
@@ -60,7 +145,7 @@ trait UserBusinessDelegate extends UserService {
     val lastName = cleanse(user.lastName)
     val phoneNum = cleansePhoneNum(user.phoneNum)
 
-    val email = user.email.map { cleanse(_) }
+    val email = user.email.map { cleanse }
 
     user.copy(userId = userId, firstName = firstName, lastName = lastName, phoneNum = phoneNum,
       email = email)
@@ -79,4 +164,8 @@ trait UserBusinessDelegate extends UserService {
 
     phone
   }
+}
+
+object UserBusinessDelegate {
+  def props(userService: UserService, executor: ExecutionContextExecutor) = Props(new UserBusinessDelegate(userService)(executor))
 }

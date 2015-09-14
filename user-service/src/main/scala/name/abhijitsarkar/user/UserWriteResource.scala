@@ -12,7 +12,11 @@ import scala.concurrent.Future
 
 import name.abhijitsarkar.user.domain.User
 import name.abhijitsarkar.user.service.UserService
+import name.abhijitsarkar.user.service.UserService._
 import name.abhijitsarkar.user.UserJsonSupport._
+import akka.actor._
+import akka.stream.scaladsl.Source
+import akka.stream._
 
 trait UserWriteResource extends ActorPlumbing {
   val userService: UserService
@@ -20,41 +24,48 @@ trait UserWriteResource extends ActorPlumbing {
   // TODO: Content negotiation is not implemented.
   // http://stackoverflow.com/questions/32187858/akka-http-accept-and-content-type-handling
   // http://stackoverflow.com/questions/30859264/test-akka-http-server-using-specs2
+
   val writeRoute = {
     logRequestResult("user-service") {
       pathPrefix("user") {
         (put & entity(as[User])) { user =>
           extractUri { requestUri =>
-            val future = userService.createUser(user)
+            val source = Source.actorRef[UserModificationResponse](10, OverflowStrategy.fail)
+              .mapMaterializedValue(ref ⇒ ref ! UserCreateRequest(user))
 
-            val result = future.map {
-              case Some(user) => Response(Created, s"$requestUri/${user.userId.get}")
-              case _ => Response(Conflict, s"Failed to create user with id: ${user.userId}.")
+            val emptyResponse = (0, "")
+
+            val result = source.runFold(emptyResponse) { (_, response) =>
+              response match {
+                case UserModificationResponse(statusCode, Some(user)) => (statusCode.intValue, s"$requestUri/${user.userId.get}")
+                case UserModificationResponse(statusCode, _) => (statusCode.intValue, s"Failed to create user with id: ${user.userId}.")
+              }
             }
 
-            complete(result)
+            complete(result.map(identity))
           }
         } ~
           (post & entity(as[User])) { user =>
-            val future = userService.updateUser(user)
+            val source = Source.actorRef[UserModificationResponse](10, OverflowStrategy.fail)
+              .mapMaterializedValue(ref ⇒ ref ! UserUpdateRequest(user))
 
-            val result = future.map { processDeleteOrUpdateResponse }
-            complete(result)
+            val result = processDeleteOrUpdateResponse(source)
+            complete(result.map(identity))
           } ~
           (delete & path(Segment)) { userId =>
-            val future = userService.deleteUser(userId)
+            val source = Source.actorRef[UserModificationResponse](10, OverflowStrategy.fail)
+              .mapMaterializedValue(ref ⇒ ref ! UserDeleteRequest(userId))
 
-            val result = future.map { processDeleteOrUpdateResponse }
-            complete(result)
+            val result = processDeleteOrUpdateResponse(source)
+            complete(result.map(identity))
           }
       }
     }
   }
 
-  def processDeleteOrUpdateResponse(user: Option[User]) = {
-    user match {
-      case Some(user) => Response(OK, user.userId.get)
-      case _ => Response(NotFound, "No user found.")
-    }
+  def processDeleteOrUpdateResponse(source: Source[UserModificationResponse, Unit]) = {
+    val emptyResponse = (0, Option.empty[User])
+
+    source.runFold(emptyResponse) { (_, response) => (response.statusCode.intValue, response.body) }
   }
 }

@@ -1,86 +1,123 @@
 package name.abhijitsarkar.user.service
 
 import scala.collection.immutable.Seq
-import scala.concurrent.Await
-import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
-import org.scalatest.FlatSpec
+import org.scalatest.FlatSpecLike
 import org.scalatest.Matchers
 import akka.util.Timeout
-import name.abhijitsarkar.user.TestUtil.verifySingleUser
-import name.abhijitsarkar.user.domain.User
 import name.abhijitsarkar.user.repository.MockUserRepository
-import org.scalatest.concurrent.ScalaFutures
-import scala.concurrent.ExecutionContext.Implicits.global
+import akka.actor.ActorSystem
+import akka.testkit.TestKit
+import akka.testkit.ImplicitSender
+import org.scalatest.BeforeAndAfterAll
+import akka.actor.Props
+import name.abhijitsarkar.user.service.UserService._
+import scala.concurrent.ExecutionContextExecutor
+import name.abhijitsarkar.user.repository.MockUserRepository
+import akka.http.scaladsl.model.StatusCodes.OK
+import akka.http.scaladsl.model.StatusCodes.InternalServerError
+import akka.http.scaladsl.model.StatusCodes._
+import scala.concurrent.Promise
+import scala.concurrent.Await
+import name.abhijitsarkar.user.domain.User
+import akka.http.scaladsl.model.StatusCode
 
-class UserBusinessDelegateSpec extends FlatSpec with Matchers with ScalaFutures {
-  val userRepository = new MockUserRepository with UserBusinessDelegate
-
-  it should "trim leading and trailing spaces from first name search" in {
-    val future = userRepository.findByFirstName(" john ")
-
-    verifySingleUser(future.futureValue)
-  }
-
-  it should "trim leading and trailing spaces from last name search" in {
-    val future = userRepository.findByLastName(" doe ")
-
-    verifySingleUser(future.futureValue)
-  }
-
-  it should "trim leading and trailing spaces from first and last names search" in {
-    val future = userRepository.findByFirstAndLastNames(" john ", " doe ")
-
-    verifySingleUser(future.futureValue)
-  }
-
-  it should "camel case results of first name search" in {
-    val future = userRepository.findByFirstName("john")
-
-    verifySingleUser(future.futureValue)
-  }
-
-  it should "camel case results of last name search" in {
-    val future = userRepository.findByLastName("doe")
-
-    verifySingleUser(future.futureValue)
-  }
-
-  it should "camel case results of first and last names search" in {
-    val future = userRepository.findByFirstAndLastNames(" john ", " doe ")
-
-    verifySingleUser(future.futureValue)
-  }
-
-  it should "prettify phone number" in {
-    userRepository.prettifyPhoneNum("1111111111") shouldBe ("111-111-1111")
-  }
-
-  it should "cleanse phone number from dashes" in {
-    userRepository.cleansePhoneNum("111-111-1111") shouldBe ("1111111111")
-  }
-
-  it should "cleanse phone number from periods" in {
-    userRepository.cleansePhoneNum("111.111.1111") shouldBe ("1111111111")
-  }
-
-  it should "reject phone number if not 10 digits long" in {
-    an[IllegalArgumentException] should be thrownBy userRepository.cleansePhoneNum("111")
-  }
-
-  it should "cleanse data from leading and trailing spaces" in {
-    userRepository.cleanse("   abc   ") shouldBe ("abc")
-  }
-
-  it should "convert data to lowercase" in {
-    userRepository.cleanse("AbC") shouldBe ("abc")
-  }
-
-  it should "reject data if null" in {
-    an[IllegalArgumentException] should be thrownBy userRepository.cleanse(null)
-  }
-
-  it should "reject data if empty" in {
-    an[IllegalArgumentException] should be thrownBy userRepository.cleanse("")
-  }
-}
+//class UserBusinessDelegateSpec extends TestKit(ActorSystem("user-service")) with ImplicitSender with FlatSpecLike with Matchers with BeforeAndAfterAll {
+//  implicit val executor: ExecutionContextExecutor = system.dispatcher
+//  val duration = 1 seconds
+//
+//  val userRepository = new MockUserRepository
+//  //  val mockUsers = Seq(userRepository.mockUser)
+//  val mockUser = User(Some("1"), "John", "Doe", "555-555-5555", Some("johndoe@gmail.com"))
+//
+//  override def afterAll {
+//    TestKit.shutdownActorSystem(system)
+//  }
+//
+//  val businessDelegate = system.actorOf(UserBusinessDelegate.props(userRepository, executor))
+//
+//  def pf[A]: PartialFunction[Any, A] = {
+//    case p: Promise[A] => {
+//      Await.result[A](p.future, duration)
+//    }
+//  }
+//
+//  def findByNameAndThenVerify(request: FindByNameRequest) = {
+//    businessDelegate ! request
+//
+//    val actual = expectMsgPF[FindByNameResponse](duration)(pf)
+//
+//    actual.statusCode shouldBe (OK)
+//    actual.body should contain(mockUser)
+//  }
+//
+//  it should "trim leading and trailing spaces from first name search results" in {
+//    findByNameAndThenVerify(FindByNameRequest(Some(" john "), None))
+//  }
+//
+//  it should "trim leading and trailing spaces from last name search results" in {
+//    findByNameAndThenVerify(FindByNameRequest(None, Some(" Doe ")))
+//  }
+//
+//  it should "trim leading and trailing spaces from first and last names search results" in {
+//    findByNameAndThenVerify(FindByNameRequest(Some(" john "), Some(" doe ")))
+//  }
+//
+//  it should "camel case first name search results" in {
+//    findByNameAndThenVerify(FindByNameRequest(Some("john"), None))
+//  }
+//
+//  it should "camel case last name search results" in {
+//    findByNameAndThenVerify(FindByNameRequest(None, Some("doe")))
+//  }
+//
+//  it should "camel case first and last names search results" in {
+//    findByNameAndThenVerify(FindByNameRequest(Some("john"), Some("doe")))
+//  }
+//
+//  it should "reject a name search with neither a first name nor a last" in {
+//    businessDelegate ! FindByNameRequest(None, None)
+//
+//    val actual = expectMsgPF[FindByNameResponse](duration)(pf)
+//
+//    actual.statusCode shouldBe (BadRequest)
+//    actual.body shouldBe empty
+//  }
+//
+//  it should "process user update request" in {
+//    businessDelegate ! UserUpdateRequest(mockUser)
+//
+//    val actual = expectMsgPF[UserModificationResponse](duration)(pf)
+//
+//    actual.statusCode shouldBe (OK)
+//    actual.body shouldBe defined
+//  }
+//
+//  it should "reject phone number if not 10 digits long during user update" in {
+//    businessDelegate ! UserUpdateRequest(mockUser.copy(phoneNum = "555"))
+//
+//    val actual = expectMsgPF[StatusCode](duration)(pf)
+//    
+//    actual shouldBe BadRequest
+//  }
+//  
+//  it should "process user create request" in {
+//    businessDelegate ! UserCreateRequest(mockUser)
+//
+//    val actual = expectMsgPF[UserModificationResponse](duration)(pf)
+//
+//    actual.statusCode shouldBe (Created)
+//    actual.body shouldBe defined
+//  }
+//  
+//  it should "process user delete request" in {
+//    businessDelegate ! UserDeleteRequest(mockUser.userId.get)
+//
+//    val actual = expectMsgPF[UserModificationResponse](duration)(pf)
+//
+//    actual.statusCode shouldBe (OK)
+//    actual.body shouldBe defined
+//  }
+//  
+//  // TODO: More tests  
+//}

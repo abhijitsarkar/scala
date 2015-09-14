@@ -11,6 +11,9 @@ import org.scalatest.BeforeAndAfterAll
 import name.abhijitsarkar.user.repository.MongoDBCollectionFactory
 import name.abhijitsarkar.user.repository.MongoDBUserRepository
 
+import org.scalatest.Ignore
+
+@Ignore
 class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with BeforeAndAfterAll {
   private val collection = newCollection("test")
 
@@ -23,7 +26,7 @@ class MongoDBUserRepositorySpec extends fixture.FlatSpec with Matchers with Befo
 
     users shouldBe empty
 
-    val testUser = User(None, "John", "Doe", "111-111-1111", None)
+    val testUser = User(None, "john", "doe", "111-111-1111", None)
 
     val newUser = userRepository.createUser(testUser)
 

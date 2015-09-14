@@ -16,7 +16,9 @@ import name.abhijitsarkar.user.UserJsonSupport._
 import name.abhijitsarkar.user.repository.MockUserRepository
 import name.abhijitsarkar.user.service.UserService
 import akka.http.scaladsl.model.ContentTypes.`application/json`
+import org.scalatest.Ignore
 
+@Ignore
 class UserWriteResourceSpec extends FlatSpec with Matchers with ScalatestRouteTest with UserWriteResource with ActorPlumbing {
   override def testConfigSource = "akka.loglevel = WARNING"
   override def config = testConfig

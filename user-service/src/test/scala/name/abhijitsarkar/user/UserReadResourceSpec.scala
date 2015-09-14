@@ -16,13 +16,18 @@ import name.abhijitsarkar.user.UserJsonSupport._
 import name.abhijitsarkar.user.repository.MockUserRepository
 import name.abhijitsarkar.user.service.UserService
 import akka.http.scaladsl.model.ContentTypes.`application/json`
+import name.abhijitsarkar.user.service.UserBusinessDelegate
+import scala.concurrent.ExecutionContextExecutor
+import akka.actor.Props
 
 class UserReadResourceSpec extends FlatSpec with Matchers with ScalatestRouteTest with UserReadResource with ActorPlumbing {
   override def testConfigSource = "akka.loglevel = WARNING"
   override def config = testConfig
   override val logger = NoLogging
-
-  val userService: UserService = new MockUserRepository
+  override implicit val executor: ExecutionContextExecutor = system.dispatcher
+  
+  val userRepository = new MockUserRepository
+  override val businessDelegateProps: Props = UserBusinessDelegate.props(userRepository, executor)
 
   it should "find a single user with first name John" in {
     Get(s"/user?firstName=John").withHeaders(acceptHeader()) ~> readRoute ~> check {

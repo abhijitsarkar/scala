@@ -40,9 +40,9 @@ class MongoDBUserRepositoryAdapter(private val userRepository: MongoDBUserReposi
   }
 
   override def deleteUser(userId: String) = {
-    val user = userRepository.deleteUser(userId)
+    val usr = userRepository.deleteUser(userId)
 
-    transform(user)
+    transform(usr)
   }
 
   private def transform(user: Option[User]) = {
@@ -54,8 +54,7 @@ class MongoDBUserRepositoryAdapter(private val userRepository: MongoDBUserReposi
 
   private def transform(users: Seq[User]) = {
     val src = Source(users)
-    val sink = Sink.fold[Seq[User], User](Seq.empty)(_ :+ _)
 
-    src.runWith(sink)
+    src.runFold(Seq.empty[User])((accumulator, usr) => accumulator :+ usr)
   }
 }

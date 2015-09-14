@@ -15,6 +15,9 @@ import scala.concurrent.duration.Duration
 import org.scalatest.time.{ Millis, Seconds, Span }
 import scala.util.Random
 
+import org.scalatest.Ignore
+
+@Ignore
 class MySQLUserRepositorySpec extends fixture.FlatSpec with Matchers with BeforeAndAfterAll with ScalaFutures {
   private val userRepository = new MySQLUserRepository(db)(global)
   private val randomGenerator = new Random
