@@ -1,13 +1,12 @@
 package name.abhijitsarkar.user.repository
 
 import name.abhijitsarkar.user.domain.User
-import name.abhijitsarkar.user.service.UserService
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import name.abhijitsarkar.user.ActorPlumbing
 import scala.collection.immutable.Seq
 
-class MockUserRepository(implicit val executor: ExecutionContextExecutor) extends UserService {
-  
+class MockUserRepository(implicit val executor: ExecutionContextExecutor) extends UserRepository {
+
   val mockUser = User(Some("1"), "john", "doe", "5555555555", Some("johndoe@gmail.com"))
 
   private def toFuture[A](anything: A) = {
@@ -31,22 +30,28 @@ class MockUserRepository(implicit val executor: ExecutionContextExecutor) extend
 
     toFuture[Seq[User]](result)
   }
+  
+  override def findById(userId: String) = {
+    val result = if (userId == mockUser.userId.get) Some(mockUser) else None
+    
+    toFuture[Option[User]](result)
+  }
 
   override def updateUser(user: User) = {
-    val result = if (user.userId == mockUser.userId) Some(user) else None
+    val result = if (user.userId == mockUser.userId) user.userId else None
 
-    toFuture[Option[User]](result)
+    toFuture[Option[String]](result)
   }
 
   override def createUser(user: User) = {
-    val result = if (user.userId == mockUser.userId) Some(user) else None
+    val result = if (user.userId == mockUser.userId) user.userId else None
 
-    toFuture[Option[User]](result)
+    toFuture[Option[String]](result)
   }
 
   override def deleteUser(userId: String) = {
-    val result = if (userId == mockUser.userId.get) Some(mockUser) else None
+    val result = if (userId == mockUser.userId.get) mockUser.userId else None
 
-    toFuture[Option[User]](result)
+    toFuture[Option[String]](result)
   }
 }

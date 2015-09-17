@@ -1,40 +1,21 @@
-package name.abhijitsarkar.user
+package name.abhijitsarkar.user.controller
 
 import scala.collection.immutable.Seq
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-import akka.event.NoLogging
 import akka.http.scaladsl.model.StatusCodes.BadRequest
 import akka.http.scaladsl.model.StatusCodes.OK
-import akka.http.scaladsl.model.StatusCodes.Created
 import akka.http.scaladsl.model.StatusCodes.NotFound
-import akka.http.scaladsl.model.StatusCodes.Conflict
-import akka.http.scaladsl.testkit.ScalatestRouteTest
 import name.abhijitsarkar.user.domain.User
 import name.abhijitsarkar.user.TestUtil._
-import name.abhijitsarkar.user.UserJsonSupport._
-import name.abhijitsarkar.user.repository.MockUserRepository
-import name.abhijitsarkar.user.service.UserService
+import name.abhijitsarkar.user.controller.UserJsonSupport._
 import akka.http.scaladsl.model.ContentTypes.`application/json`
-import name.abhijitsarkar.user.service.UserBusinessDelegate
-import scala.concurrent.ExecutionContextExecutor
-import akka.actor.Props
 
-class UserReadResourceSpec extends FlatSpec with Matchers with ScalatestRouteTest with UserReadResource with ActorPlumbing {
-  override def testConfigSource = "akka.loglevel = WARNING"
-  override def config = testConfig
-  override val logger = NoLogging
-  override implicit val executor: ExecutionContextExecutor = system.dispatcher
-  
-  val userRepository = new MockUserRepository
-  override val businessDelegateProps: Props = UserBusinessDelegate.props(userRepository, executor)
-
+class UserReadResourceSpec extends UserResourceSpec with UserReadResource {
   it should "find a single user with first name John" in {
     Get(s"/user?firstName=John").withHeaders(acceptHeader()) ~> readRoute ~> check {
       status shouldBe OK
       contentType shouldBe (`application/json`)
       val users = responseAs[Seq[User]]
-
+      
       verifySingleUser(users)
     }
   }

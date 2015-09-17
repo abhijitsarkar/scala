@@ -5,7 +5,6 @@ import scala.concurrent._
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import name.abhijitsarkar.user.domain.User
-import name.abhijitsarkar.user.service.UserService._
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model._
@@ -13,14 +12,15 @@ import akka.actor.Props
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
+import scala.collection.mutable.ArrayBuffer
 import akka.stream.actor.ActorPublisher
 import scala.annotation.tailrec
-import akka.stream.actor.ActorPublisherMessage.{ Cancel, Request }
+import name.abhijitsarkar.user.repository.UserRepository._
+import name.abhijitsarkar.user.repository.UserRepository
 
-class UserBusinessDelegate(private val userService: UserService)(private implicit val executor: ExecutionContextExecutor)
-    extends ActorPublisher[Future[UserServiceResponse]] with ActorLogging {
-  val maxBufferSize = 100
-  var buff = Vector.empty[Future[UserServiceResponse]]
+class UserBusinessDelegate(private val userRepository: UserRepository)(private implicit val executor: ExecutionContextExecutor)
+    extends Actor with ActorLogging {
+  import UserBusinessDelegate._
 
   override def postStop() {
     log.info(s"Stopping ${getClass.getName}")
@@ -36,85 +36,69 @@ class UserBusinessDelegate(private val userService: UserService)(private implici
     }
   }
 
-  def isBufferFull = (buff.size == maxBufferSize)
-
-  def isBufferEmpty = (buff.size == 0)
-
-  def process(response: Future[UserServiceResponse]) = {
-    sender ! Future.successful(Accepted)
-
-    buff :+= response
-
-    deliver
-  }
-
-  @tailrec final def deliver: Unit = {
-     println(s"totalDemand: $totalDemand, isActive: $isActive, buffer empty: ${isBufferEmpty}, buff: $buff")
-    
-    if (totalDemand > 0 && isActive && !isBufferEmpty) {
-      val (use, keep) = buff.splitAt(totalDemand.toInt)
-      buff = keep
-      
-      use foreach { item => println(item); onNext(item) }
-      deliver
-    }
-  }
-
   def receive = {
-    case _ if (isBufferFull) => sender ! Future.failed(new StackOverflowError)
-
     case FindByNameRequest(Some(firstName), None) => {
       val cleansedFirstName = cleanse(firstName)
 
-      val future = userService.findByFirstName(cleansedFirstName).map { prettifyUsers }
+      val future = userRepository.findByFirstName(cleansedFirstName).map { prettifyUsers }
 
-      process(future.map { processFindByNameResults(_) })
+      sender ! future.map { processFindByNameResults(_) }
     }
 
     case FindByNameRequest(None, Some(lastName)) => {
       val cleansedLastName = cleanse(lastName)
 
-      val future = userService.findByLastName(cleanse(cleansedLastName)).map { prettifyUsers }
+      val future = userRepository.findByLastName(cleanse(cleansedLastName)).map { prettifyUsers }
 
-      process(future.map { processFindByNameResults(_) })
+      sender ! future.map { processFindByNameResults(_) }
     }
 
     case FindByNameRequest(Some(firstName), Some(lastName)) => {
       val cleansedFirstName = cleanse(firstName)
       val cleansedLastName = cleanse(lastName)
 
-      val future = userService.findByFirstAndLastNames(cleansedFirstName, cleansedLastName).map { prettifyUsers }
+      val future = userRepository.findByFirstAndLastNames(cleansedFirstName, cleansedLastName).map { prettifyUsers }
 
-      process(future.map { processFindByNameResults(_) })
+      sender ! future.map { processFindByNameResults(_) }
     }
 
-    case FindByNameRequest(_, _) => sender ! process(Future.successful(FindByNameResponse(StatusCodes.BadRequest, Seq.empty[User])))
+    case FindByNameRequest(_, _) => sender ! Future.successful(FindByNameResponse(StatusCodes.BadRequest, Seq.empty[User]))
 
-    case UserUpdateRequest(user) => process(userService.updateUser(cleanseUser(user)).map {
+    case FindByIdRequest(userId) => userRepository.findById(cleanse(userId)).map {
+      _ match {
+        case Some(user) => FindByIdResponse(OK, Some(user))
+        case _ => FindByIdResponse(NotFound, None)
+      }
+    }
+
+    case UserUpdateRequest(user) => sender ! userRepository.updateUser(cleanseUser(user)).map {
       userModificationResponseWithStatusCode(_, NotFound)
-    })
+    }
 
-    case UserCreateRequest(user) => process(userService.createUser(cleanseUser(user)).map {
+    case UserCreateRequest(user) => sender ! userRepository.createUser(cleanseUser(user)).map {
       userModificationResponseWithStatusCode(_, Conflict, Created)
-    })
+    }
 
-    case UserDeleteRequest(userId) => process(userService.deleteUser(cleanse(userId)).map {
+    case UserDeleteRequest(userId) => sender ! userRepository.deleteUser(cleanse(userId)).map {
       userModificationResponseWithStatusCode(_, NotFound)
-    })
+    }
 
-    case Request(_) => deliver
-    case Cancel => context.stop(self)
+    case _ => sender ! Future.successful(BadRequest)
   }
 
-  private[user] def userModificationResponseWithStatusCode(user: Option[User], failureStatus: StatusCode,
+  private[user] def userModificationResponseWithStatusCode(userId: Option[String], failureStatus: StatusCode,
     successStatus: StatusCode = OK) = {
     UserModificationResponse(
-      statusCode = user match {
-        case Some(user) => successStatus
+      statusCode = userId match {
+        case Some(uid) => successStatus
         case _ => failureStatus
       },
-      body = user.map { prettifyUser })
+      body = userId.map { identity })
   }
+}
+
+object UserBusinessDelegate {
+  def props(userRepository: UserRepository, executor: ExecutionContextExecutor) = Props(new UserBusinessDelegate(userRepository)(executor))
 
   private[user] def isNotNullOrEmpty(input: String) = {
     input != null && !input.trim.isEmpty
@@ -164,8 +148,4 @@ class UserBusinessDelegate(private val userService: UserService)(private implici
 
     phone
   }
-}
-
-object UserBusinessDelegate {
-  def props(userService: UserService, executor: ExecutionContextExecutor) = Props(new UserBusinessDelegate(userService)(executor))
 }
