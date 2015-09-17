@@ -70,6 +70,8 @@ trait UserRepositorySpec extends fixture.FlatSpec with Matchers with ScalaFuture
     val user = User(randomId, "test", "test", randomPhoneNum, None)
 
     val newUserId = userRepository.createUser(user)
+    
+    randomId shouldBe(newUserId.futureValue)
 
     val newUser = userRepository.findById(randomId.get)
     verifySingleUser(Seq(newUser.futureValue.get), "test", "test")
@@ -84,11 +86,13 @@ trait UserRepositorySpec extends fixture.FlatSpec with Matchers with ScalaFuture
   }
 
   it should "not be able to update users with duplicate phone numbers" in { testUser =>
-    val user = testUser.copy(userId = Some(someUserId), phoneNum = randomPhoneNum, email = Some(randomEmail))
+    val randomId = Some(someUserId)
+    
+    val user = testUser.copy(userId = randomId, phoneNum = randomPhoneNum, email = Some(randomEmail))
 
     val newUserId = userRepository.createUser(user)
 
-    newUserId.futureValue shouldBe defined
+    newUserId.futureValue shouldBe(randomId)
 
     val newUser = userRepository.findById(newUserId.futureValue.get)
 
@@ -108,11 +112,12 @@ trait UserRepositorySpec extends fixture.FlatSpec with Matchers with ScalaFuture
   }
 
   it should "not be able to update users with duplicate emails" in { testUser =>
-    val user = testUser.copy(userId = Some(someUserId), phoneNum = randomPhoneNum, email = Some(randomEmail))
+    val userId = Some(someUserId)
+    val user = testUser.copy(userId = userId, phoneNum = randomPhoneNum, email = Some(randomEmail))
 
     val newUserId = userRepository.createUser(user)
 
-    newUserId.futureValue shouldBe defined
+    newUserId.futureValue shouldBe(userId)
 
     val newUser = userRepository.findById(newUserId.futureValue.get)
 
@@ -125,6 +130,8 @@ trait UserRepositorySpec extends fixture.FlatSpec with Matchers with ScalaFuture
 
   it should "be able to update user's email" in { testUser =>
     val email = Some(randomEmail)
+    
+    println(s"Updating email from: ${testUser.email.get} to: ${email.get} for user id: ${testUser.userId.get}")
 
     val user = testUser.copy(email = email)
 
@@ -134,11 +141,18 @@ trait UserRepositorySpec extends fixture.FlatSpec with Matchers with ScalaFuture
 
     val updatedUser = userRepository.findById(updatedUserId.futureValue.get)
 
-    updatedUser.futureValue.flatMap { _.email } shouldBe (email)
+    def combineIdAndMail(id: Option[String], mail: Option[String]) = {
+      for { userId <- id; m <- mail } yield (userId, m)
+    }
+
+    updatedUser.futureValue.flatMap { u => combineIdAndMail(u.userId, u.email) } shouldBe (combineIdAndMail(testUser.userId, email))
   }
 
   it should "not be able to update non existing user" in { testUser =>
-    val user = testUser.copy(Some(someUserId))
+    val userId = someUserId
+    val user = testUser.copy(Some(userId))
+    
+    userRepository.findById(userId).futureValue shouldBe empty
 
     val updatedUserId = userRepository.updateUser(user)
 

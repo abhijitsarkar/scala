@@ -3,17 +3,8 @@ package name.abhijitsarkar.user.repository
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.collection._
 import name.abhijitsarkar.user.domain.User
-import slick.driver.MySQLDriver.api.DBIO
-import slick.driver.MySQLDriver.api.Database
-import slick.driver.MySQLDriver.api.TableQuery
-import slick.driver.MySQLDriver.api.columnExtensionMethods
-import slick.driver.MySQLDriver.api.queryDeleteActionExtensionMethods
-import slick.driver.MySQLDriver.api.queryInsertActionExtensionMethods
-import slick.driver.MySQLDriver.api.queryUpdateActionExtensionMethods
-import slick.driver.MySQLDriver.api.streamableQueryActionExtensionMethods
-import slick.driver.MySQLDriver.api.stringColumnType
-import slick.driver.MySQLDriver.api.valueToConstColumn
-import slick.lifted.Query
+import slick.driver.MySQLDriver.api._
+import slick.jdbc.GetResult
 import scala.util.Success
 import scala.util.Failure
 import slick.dbio.DBIOAction
@@ -21,55 +12,62 @@ import slick.dbio.Effect.Write
 import slick.dbio.NoStream
 import org.slf4j.LoggerFactory
 
-// TODO: Compile queries
-class MySQLUserRepository(private val db: Database)(private implicit val executor: ExecutionContextExecutor) extends UserRepository {
+class MySQLPlainUserRepository(private val db: Database)(private implicit val executor: ExecutionContextExecutor) extends UserRepository {
   val logger = LoggerFactory.getLogger(getClass)
 
-  val users = TableQuery[Users]
+  val table = "users"
+
+  implicit val getUserResult = GetResult[User](u => User(u.<<, u.<<, u.<<, u.<<, u.<<))
 
   def findByFirstName(firstName: String): Future[immutable.Seq[User]] = {
-    val query = users.filter { _.firstName === firstName }
+    val query = s"first_name = '$firstName'"
 
     run(query)
   }
 
-  private def run(query: Query[Users, User, Seq]): Future[immutable.Seq[User]] = {
-    db.run(query.result).map { _.toList }
+  private def run(whereClause: String): Future[immutable.Seq[User]] = {
+    val query: DBIO[Seq[User]] =
+      sql"""SELECT *
+      FROM #$table
+      WHERE #$whereClause
+      """.as[User]
+
+    db.run(query).map { _.toList }
   }
 
   def findByLastName(lastName: String): Future[immutable.Seq[User]] = {
-    val query = users.filter { _.lastName === lastName }
+    val query = s"last_name = '$lastName'"
 
     run(query)
   }
 
   def findByFirstAndLastNames(firstName: String, lastName: String): Future[immutable.Seq[User]] = {
-    val query = users.filter { _.firstName === firstName }.filter { _.lastName === lastName }
+    val query = s"first_name = '$firstName' AND last_name = '$lastName'"
 
     run(query)
   }
 
   def findById(userId: String): Future[Option[User]] = {
-    val query = users.filter { _.userId === userId }
+    val query = s"user_id = '$userId'"
 
-    db.run(query.result.asTry).map { // Try[Seq[User]]
-      case Success(users) => users match { // Seq[User]
+    run(query).map { // Future[Seq[User]]
+      _ match { // Seq[User]
         case immutable.Seq(user) =>
           logger.debug("Found user with user id: {}.", userId); Some(user)
         case _ => logger.warn("No user found with user id: {}.", userId); None
       }
-      case Failure(ex) => logger.error(s"Failed to find user with user id: $userId", ex); None
     }
   }
 
   def updateUser(user: User) = {
-    val userId = user.userId.get
-    
-    val q = (for { u <- users.filter { _.userId === userId } } 
-      yield (u.firstName, u.lastName, u.phoneNum, u.email))
+    val action = sqlu"""UPDATE #$table SET
+      first_name = ${user.firstName},
+      last_name = ${user.lastName},
+      phone_num = ${user.phoneNum},
+      email = ${user.email}
+      WHERE user_id = ${user.userId}
+    """
 
-    val action = q.update((user.firstName, user.lastName, user.phoneNum, user.email.getOrElse("")))
-    
     logger.debug(s"Update statement: ${action.statements.head} for user id: ${user.userId}.")
 
     createUpdateOrDelete(user.userId.get, action)
@@ -87,22 +85,25 @@ class MySQLUserRepository(private val db: Database)(private implicit val executo
   }
 
   def createUser(user: User) = {
-    val action = users += user
-    
+    val action = sqlu"""INSERT INTO #$table VALUES(
+      ${user.userId}, ${user.firstName}, ${user.lastName}, ${user.phoneNum}, ${user.email}
+    )"""
+
     logger.debug(s"Insert statement: ${action.statements.head} for user id: ${user.userId}.")
 
     createUpdateOrDelete(user.userId.get, action)
   }
 
   def deleteUser(userId: String) = {
-    val action = users.filter { _.userId === userId }.delete
-    
+    val action = sqlu"""DELETE FROM #$table
+      WHERE user_id = ${userId}
+    """
     logger.debug(s"Delete statement: ${action.statements.head} for user id: ${userId}.")
 
     createUpdateOrDelete(userId, action)
   }
 }
 
-object MySQLUserRepository {
-  def apply(db: Database)(implicit executor: ExecutionContextExecutor) = new MySQLUserRepository(db)(executor)
+object MySQLPlainUserRepository {
+  def apply(db: Database)(implicit executor: ExecutionContextExecutor) = new MySQLPlainUserRepository(db)(executor)
 }
