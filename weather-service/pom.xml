@@ -1,0 +1,115 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>name.abhijitsarkar.maven.scala</groupId>
+		<artifactId>maven-scala-parent</artifactId>
+		<version>1.0</version>
+	</parent>
+	<groupId>name.abhijitsarkar.scala</groupId>
+	<artifactId>weather-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>weather-service</name>
+	
+	<description>
+	Sample project demonstrating the integration of Akka, Scala and Spring. Known limitations are:
+	1) Actors cannot be automatically created by String. They must be manually created using the Spring extension.
+	2) Constructor dependency injection into actors cannot be done using Spring. In that case, the actor should be
+	   created using the Props (without going through Spring extension). This is not to say that DI does not work in
+	   actors, just not through constructor injection.
+	3) More than one @Autowired not possible? Need setter injection? I've an SO question open on this.
+	http://stackoverflow.com/questions/32644580/whats-the-syntax-for-multiple-dependency-injection-using-spring-and-scala
+	</description>
+
+	<repositories>
+		<repository>
+			<id>spring-milestone</id>
+			<name>spring-milestone</name>
+			<url>http://repo.springsource.org/milestone</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<properties>
+		<mysql-driver.version>5.1.36</mysql-driver.version>
+		<commons-dbcp.version>2.1.1</commons-dbcp.version>
+		<commons-pool.version>2.4.2</commons-pool.version>
+		<spring-scala.version>1.0.0.M2</spring-scala.version>
+		<spring.version>4.2.1.RELEASE</spring.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.scala</groupId>
+			<artifactId>spring-scala</artifactId>
+			<version>${spring-scala.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-slf4j_2.11</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-stream-experimental_2.11</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>${mysql-driver.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>${commons-dbcp.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-pool2</artifactId>
+			<version>${commons-pool.version}</version>
+		</dependency>
+	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-core</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-beans</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+</project>

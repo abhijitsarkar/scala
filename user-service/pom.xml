@@ -8,7 +8,7 @@
 		<version>1.0</version>
 	</parent>
 
-	<groupId>name.abhijitsarkar</groupId>
+	<groupId>name.abhijitsarkar.scala</groupId>
 	<artifactId>user-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>user-service</name>
