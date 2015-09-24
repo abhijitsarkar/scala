@@ -14,13 +14,13 @@ object OrderSystem {
   sealed trait Activity
 
   sealed trait PaymentActivity extends Activity
-  case object YetToMakePayment extends PaymentActivity
+  case object PaymentPending extends PaymentActivity
   case object PaymentAccepted extends PaymentActivity
   case object PaymentDeclined extends PaymentActivity
 
   sealed trait BaristaActivity extends Activity { val fromState: State; val paymentActivity: PaymentActivity }
   case class BaristaIsAvailable(fromState: State, paymentActivity: PaymentActivity) extends BaristaActivity
-  case class BaristaIsBusy(fromState: Nothing, paymentActivity: Nothing) extends BaristaActivity
+  case class BaristaIsBusy(fromState: State, paymentActivity: PaymentActivity) extends BaristaActivity
 
   sealed trait CustomerActivity extends Activity
   case object HappyWithOrder extends CustomerActivity
@@ -32,36 +32,34 @@ object OrderSystem {
   // in case some data is sent from outside
   // send as, fsm ! (event, newData)
   // and match as, case Event((event, newData), data) =>
-  case class Data(fromState: State, paymentActivity: PaymentActivity)
+  //  case class Data(fromState: State, paymentActivity: PaymentActivity)
 }
 
 // good example: https://github.com/tombray/akka-fsm-examples
 import OrderSystem._
-class OrderSystem extends Actor with ActorLogging with LoggingFSM[State, Data] {
-  startWith(OrderPending, Data(OrderPending, YetToMakePayment))
+class OrderSystem extends Actor with ActorLogging with LoggingFSM[State, Unit] {
+  startWith(OrderPending, Unit)
 
   when(OrderPending) {
     case Event(BaristaIsBusy, _) => stay
-    case Event(BaristaIsAvailable(_, YetToMakePayment), _) => goto(OrderPlaced) using Data(stateName, YetToMakePayment)
-    case Event(BaristaIsAvailable(_, PaymentAccepted), _) => goto(OrderReady) using Data(stateName, PaymentAccepted)
+    case Event(BaristaIsAvailable(_, PaymentPending), _) => goto(OrderPlaced)
+    case Event(b: BaristaIsAvailable, _) => goto(OrderReady)
   }
 
-  val waitingToBeServed = Data(OrderPlaced, PaymentAccepted)
-
   when(OrderPlaced) {
-    case Event(b: BaristaIsAvailable, `waitingToBeServed`) => goto(OrderReady) using `waitingToBeServed`
-    case Event(b: BaristaIsBusy, `waitingToBeServed`) => goto(OrderPending) using `waitingToBeServed`
-    case Event(_, Data(_, PaymentDeclined)) => goto(OrderClosed) using Data(stateName, PaymentDeclined)
-    case Event(_, Data(_, YetToMakePayment)) => stay using Data(stateName, YetToMakePayment)
+    case Event(BaristaIsAvailable(_, PaymentAccepted), _) => goto(OrderReady)
+    case Event(BaristaIsBusy(_, PaymentAccepted), _) => goto(OrderPending)
+    case Event(b: BaristaActivity, _) if (b.paymentActivity == PaymentDeclined) => goto(OrderClosed)
+    case Event(b: BaristaActivity, _) if (b.paymentActivity == PaymentPending) => stay
   }
 
   when(OrderReady) {
     case Event(HappyWithOrder, _) => goto(OrderClosed)
-    case Event(NotHappyWithOrder, _) => goto(OrderPending) using Data(stateName, PaymentAccepted)
+    case Event(NotHappyWithOrder, _) => goto(OrderPending)
   }
 
   when(OrderClosed) {
-    case Event(_, _) => stay
+    case _ => stay
   }
 
   whenUnhandled {
@@ -74,10 +72,9 @@ class OrderSystem extends Actor with ActorLogging with LoggingFSM[State, Data] {
 
   // previous state data is available as 'stateData' and next state data as 'nextStateData'
   // not necessary as LoggingFSM (if configured) will take care of logging
-  onTransition {
-    case _ -> nextState => log.info("Entering state: {} with payment activity: {} from state: {} with payment activity: {}.",
-      nextState, stateData.paymentActivity, nextStateData.fromState, nextStateData.paymentActivity)
-  }
+  //  onTransition {
+  //    case _ -> nextState =>
+  //  }
 
   initialize()
 }
