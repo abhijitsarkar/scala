@@ -3,7 +3,7 @@ package name.abhijitsarkar.scala.scauth.api
 import name.abhijitsarkar.scala.scauth.util.StringUtil.isNullOrEmpty
 import scala.collection.immutable.ListMap
 import akka.http.scaladsl.model.HttpMethods.POST
-import akka.http.scaladsl.model.HttpMethod
+import name.abhijitsarkar.scala.scauth.model.OAuthRequestConfig
 
 trait OAuthSignature {
   def newInstance: String
@@ -19,23 +19,23 @@ trait OAuthSignature {
  * @param tokenSecret The value which identifies the account your application is acting on behalf of;
  *   may not be known yet if obtaining a request token.
  */
-abstract class OAuth10Signature(requestMethod: HttpMethod, baseUrl: String, queryParams: Map[String, String],
+abstract class OAuth10Signature(oAuthRequestConfig: OAuthRequestConfig,
     consumerSecret: String, tokenSecret: Option[String], oAuthEncoder: OAuthEncoder) extends OAuthSignature {
-  require(!isNullOrEmpty(baseUrl), "The base URL must not be null or empty.")
+  require(!isNullOrEmpty(oAuthRequestConfig.baseUrl), "The base URL must not be null or empty.")
   require(!isNullOrEmpty(consumerSecret), "The consumer secret must not be null or empty.")
 
   override val baseString = {
     // view allows for traversal only when necessary, doesn't create intermediate collection
-    val queryUrl = ListMap(queryParams.toSeq.sortBy(_._1): _*).view.zipWithIndex.foldLeft("") {
+    val queryUrl = ListMap(oAuthRequestConfig.queryParams.toSeq.sortBy(_._1): _*).view.zipWithIndex.foldLeft("") {
       case (acc, ((key, value), index)) =>
         s"${acc}${oAuthEncoder.encode(key)}=${oAuthEncoder.encode(value)}${ampersandOrEmpty(index)}"
     }
 
-    s"${requestMethod.name.toUpperCase}&${oAuthEncoder.encode(baseUrl)}&${oAuthEncoder.encode(queryUrl)}"
+    s"${oAuthRequestConfig.requestMethod.name.toUpperCase}&${oAuthEncoder.encode(oAuthRequestConfig.baseUrl)}&${oAuthEncoder.encode(queryUrl)}"
   }
 
   private def ampersandOrEmpty(index: Int) = {
-    if (index != (queryParams.size - 1)) "&" else ""
+    if (index != (oAuthRequestConfig.queryParams.size - 1)) "&" else ""
   }
 
   override def signingKey: String = {

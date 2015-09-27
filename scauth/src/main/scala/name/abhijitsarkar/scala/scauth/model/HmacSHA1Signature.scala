@@ -6,14 +6,11 @@ import javax.crypto.spec.SecretKeySpec
 import name.abhijitsarkar.scala.scauth.api.OAuth10Signature
 import name.abhijitsarkar.scala.scauth.api.OAuthEncoder
 import name.abhijitsarkar.scala.scauth.util.SimpleUrlEncoder
-import akka.http.scaladsl.model.HttpMethods.GET
-import akka.http.scaladsl.model.HttpMethod
 
-case class HmacSHA1Signature(requestMethod: HttpMethod = GET,
-  baseUrl: String, queryParams: Map[String, String] = Map[String, String](),
+case class HmacSHA1Signature(oAuthRequestConfig: OAuthRequestConfig,
   consumerSecret: String, tokenSecret: Option[String] = None,
   val oAuthEncoder: OAuthEncoder = SimpleUrlEncoder)
-    extends OAuth10Signature(requestMethod, baseUrl, queryParams, consumerSecret, tokenSecret,
+    extends OAuth10Signature(oAuthRequestConfig, consumerSecret, tokenSecret,
       oAuthEncoder) {
 
   override def newInstance = {
