@@ -6,6 +6,8 @@
 
 [Creating a signature](https://dev.twitter.com/oauth/overview/creating-signatures)
 
+[Authorizing a Request](https://dev.twitter.com/oauth/overview/authorizing-requests)
+
 [Scribe](https://github.com/fernandezpablo85/scribe-java) an OAuth Java Library
 
 [Scala Constructor Parameters' Visibility](http://stackoverflow.com/questions/14694712/do-scala-constructor-parameters-default-to-private-val)

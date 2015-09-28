@@ -8,29 +8,27 @@ import name.abhijitsarkar.scala.scauth.model.OAuthCredentials
 import name.abhijitsarkar.scala.scauth.util.ActorPlumbing
 import scala.concurrent.ExecutionContext
 
-object YelpApp extends App {
-  implicit val system = ActorSystem("yelp")
+object TwitterApp extends App {
+  implicit val system = ActorSystem("twitter")
   implicit val materializer = ActorMaterializer()
   implicit val executionContext: ExecutionContext = { implicitly }
 
-  require(args.size == 4, "Usage: YelpApp <consumerKey> <consumerSecret> <token> <tokenSecret>")
+  require(args.size == 2, "Usage: TwitterApp <consumerKey> <consumerSecret>")
 
   private val consumerKey = args(0).trim
   private val consumerSecret = args(1).trim
-  private val token = args(2).trim
-  private val tokenSecret = args(3).trim
 
-  val oAuthCredentials = OAuthCredentials(consumerKey, consumerSecret, Some(token), Some(tokenSecret))
+  val oAuthCredentials = OAuthCredentials(consumerKey, consumerSecret)
   implicit val actorPlumbing: ActorPlumbing = ActorPlumbing()
 
-  val yelpService = new YelpService(oAuthCredentials)
+  val twitterService = new TwitterService(oAuthCredentials)
 
-  val searchResults = yelpService.searchForBusinessesByLocation("dinner", "San Francisco, CA")
+  val searchResults = twitterService.search("@narendramodi")
 
   searchResults.onComplete {
     _ match {
       case Success(results) => println(results)
-      case _ => println("Bad Yelp!")
+      case _ => println("Bad Twitter!")
     }
   }
 }

@@ -3,14 +3,14 @@ package name.abhijitsarkar.scala.scauth.model
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 
-import akka.http.scaladsl.model.HttpMethods.POST
+import akka.http.scaladsl.model.HttpMethods._
 import name.abhijitsarkar.scala.scauth.model.OAuthSignatureMethod.HMacSHA1
 import name.abhijitsarkar.scala.scauth.model.OAuthSignatureMethod.signatureMethodToString
 import name.abhijitsarkar.scala.scauth.model.OAuthVersion.OneOh
 import name.abhijitsarkar.scala.scauth.model.OAuthVersion.versionToString
 
 class HmacSHA1SignatureSpec extends FlatSpec with Matchers {
-  it should "generate the HMAC-SHA1 signature" in {
+  it should "generate the HMAC-SHA1 signature for Twitter update request" in {
     val requestMethod = POST
     val baseUrl = "https://api.twitter.com/1/statuses/update.json"
     val queryParams: Map[String, String] = Map("status" -> "Hello Ladies + Gentlemen, a signed OAuth request!",

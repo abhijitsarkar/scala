@@ -9,10 +9,10 @@ import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers.string
 class YelpService(val oAuthCredentials: OAuthCredentials)(implicit val actorPlumbing: ActorPlumbing) {
   private val baseUri = "http://api.yelp.com"
   private val searchUri = s"${baseUri}/v2/search"
-  private val resultLimit = 3
+  private val resultLimit = "3"
 
   def searchForBusinessesByLocation(searchTerm: String, location: String) = {
-    val queryParams = Map("term" -> searchTerm, "location" -> location, "limit" -> String.valueOf(resultLimit))
+    val queryParams = Map("term" -> searchTerm, "location" -> location, "limit" -> resultLimit)
 
     val oAuthRequestConfig = OAuthRequestConfig(baseUrl = searchUri, queryParams = queryParams)
     
@@ -21,6 +21,6 @@ class YelpService(val oAuthCredentials: OAuthCredentials)(implicit val actorPlum
     
     val request = OAuthRequest[String](oAuthCredentials, oAuthRequestConfig)
 
-    request.sendAndReceive
+    request.sendWithAuthorizationQueryParams
   }
 }

@@ -4,6 +4,7 @@ import name.abhijitsarkar.scala.scauth.util.StringUtil.isNullOrEmpty
 import scala.collection.immutable.ListMap
 import akka.http.scaladsl.model.HttpMethods.POST
 import name.abhijitsarkar.scala.scauth.model.OAuthRequestConfig
+import org.slf4j.LoggerFactory
 
 trait OAuthSignature {
   def newInstance: String
@@ -21,8 +22,7 @@ trait OAuthSignature {
  */
 abstract class OAuth10Signature(oAuthRequestConfig: OAuthRequestConfig,
     consumerSecret: String, tokenSecret: Option[String], oAuthEncoder: OAuthEncoder) extends OAuthSignature {
-  require(!isNullOrEmpty(oAuthRequestConfig.baseUrl), "The base URL must not be null or empty.")
-  require(!isNullOrEmpty(consumerSecret), "The consumer secret must not be null or empty.")
+  private val log = LoggerFactory.getLogger(getClass())
 
   override val baseString = {
     // view allows for traversal only when necessary, doesn't create intermediate collection
@@ -31,7 +31,11 @@ abstract class OAuth10Signature(oAuthRequestConfig: OAuthRequestConfig,
         s"${acc}${oAuthEncoder.encode(key)}=${oAuthEncoder.encode(value)}${ampersandOrEmpty(index)}"
     }
 
-    s"${oAuthRequestConfig.requestMethod.name.toUpperCase}&${oAuthEncoder.encode(oAuthRequestConfig.baseUrl)}&${oAuthEncoder.encode(queryUrl)}"
+    val encodedBaseString = s"${oAuthRequestConfig.requestMethod.name.toUpperCase}&${oAuthEncoder.encode(oAuthRequestConfig.baseUrl)}&${oAuthEncoder.encode(queryUrl)}"
+    
+    log.debug("Base string: {}.", encodedBaseString)
+    
+    encodedBaseString
   }
 
   private def ampersandOrEmpty(index: Int) = {
