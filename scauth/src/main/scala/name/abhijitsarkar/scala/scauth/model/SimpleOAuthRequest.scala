@@ -1,19 +1,12 @@
 package name.abhijitsarkar.scala.scauth.model
 
-import scala.collection.immutable.Seq
+import name.abhijitsarkar.scala.scauth.api.OAuthRequest
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.model.Uri
 import name.abhijitsarkar.scala.scauth.model.OAuthSignatureMethod.signatureMethodToString
 import name.abhijitsarkar.scala.scauth.model.OAuthVersion.versionToString
-import name.abhijitsarkar.scala.scauth.util.SimpleSignatureGenerator.generateOAuthSignature
 import name.abhijitsarkar.scala.scauth.util.SimpleAuthorizationHeaderGenerator.generateAuthorizationHeader
-
-trait OAuthRequest {
-  private[scauth] def toHttpRequestWithAuthorizationQueryParams: HttpRequest
-  private[scauth] def toHttpRequestWithAuthorizationHeader: HttpRequest
-  
-  private[scauth] val signature: String
-}
+import name.abhijitsarkar.scala.scauth.util.SimpleSignatureGenerator.generateOAuthSignature
 
 case class SimpleOAuthRequest(oAuthCredentials: OAuthCredentials,
     oAuthRequestConfig: OAuthRequestConfig,
