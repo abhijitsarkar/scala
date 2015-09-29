@@ -21,7 +21,7 @@ object TwitterApp extends App {
   val oAuthCredentials = OAuthCredentials(consumerKey, consumerSecret)
   implicit val actorPlumbing: ActorPlumbing = ActorPlumbing()
 
-  val twitterService = new TwitterService(oAuthCredentials)
+  val twitterService = new TwitterSearchService(oAuthCredentials)
 
   val searchResults = twitterService.search("@narendramodi")
 
