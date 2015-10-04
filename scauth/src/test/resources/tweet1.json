@@ -1,0 +1,435 @@
+{
+    "created_at": "Sat Oct 03 08:11:19 +0000 2015",
+    "id": 650221578387521500,
+    "id_str": "650221578387521536",
+    "text": "blah",
+    "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
+    "truncated": false,
+    "in_reply_to_status_id": null,
+    "in_reply_to_status_id_str": null,
+    "in_reply_to_user_id": null,
+    "in_reply_to_user_id_str": null,
+    "in_reply_to_screen_name": null,
+    "user": {
+        "id": 1668621780,
+        "id_str": "1668621780",
+        "name": "Namo Fan ✌",
+        "screen_name": "Fan_namo001",
+        "location": "Ahmedabad, Gujarat",
+        "url": null,
+        "description": "I’m not good at talking. Can’t I just nod my way through a conversation? It’s better than nodding off... Big time animal lover.. (Namo/RSS&HDL supporter)",
+        "protected": false,
+        "verified": false,
+        "followers_count": 1523,
+        "friends_count": 501,
+        "listed_count": 20,
+        "favourites_count": 5390,
+        "statuses_count": 39586,
+        "created_at": "Tue Aug 13 20:08:27 +0000 2013",
+        "utc_offset": null,
+        "time_zone": null,
+        "geo_enabled": false,
+        "lang": "en",
+        "contributors_enabled": false,
+        "is_translator": false,
+        "profile_background_color": "C0DEED",
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_tile": false,
+        "profile_link_color": "0084B4",
+        "profile_sidebar_border_color": "C0DEED",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "profile_text_color": "333333",
+        "profile_use_background_image": true,
+        "profile_image_url": "http://pbs.twimg.com/profile_images/645970267429208065/yLm2plv-_normal.jpg",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/645970267429208065/yLm2plv-_normal.jpg",
+        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1668621780/1433531923",
+        "default_profile": true,
+        "default_profile_image": false,
+        "following": null,
+        "follow_request_sent": null,
+        "notifications": null
+    },
+    "geo": null,
+    "coordinates": null,
+    "place": null,
+    "contributors": null,
+    "retweeted_status": {
+        "created_at": "Sat Oct 03 08:08:14 +0000 2015",
+        "id": 650220802328133600,
+        "id_str": "650220802328133632",
+        "text": "Delli Cm @ArvindKejriwal feeling proud for adding Just 750 new toilet seats in 6 months and @narendramodi gvt ↓ :) http://t.co/hP55csEPAk",
+        "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
+        "truncated": false,
+        "in_reply_to_status_id": null,
+        "in_reply_to_status_id_str": null,
+        "in_reply_to_user_id": null,
+        "in_reply_to_user_id_str": null,
+        "in_reply_to_screen_name": null,
+        "user": {
+            "id": 415294882,
+            "id_str": "415294882",
+            "name": "Ramrao Kulkarni",
+            "screen_name": "RamraoKP_",
+            "location": "Bidar, Karnataka",
+            "url": "http://bjp.org",
+            "description": "| ಕನ್ನಡಿಗ |Proud Hindu Brahmin| |Nationalist| | NationFirst | |Ram ji Bhakt | |Member of @BjpIndia and RSS| | JaiHind | |Bharat Mata ki Jai| |Vandemataram|",
+            "protected": false,
+            "verified": false,
+            "followers_count": 3855,
+            "friends_count": 2113,
+            "listed_count": 37,
+            "favourites_count": 10796,
+            "statuses_count": 27902,
+            "created_at": "Fri Nov 18 04:38:30 +0000 2011",
+            "utc_offset": 19800,
+            "time_zone": "New Delhi",
+            "geo_enabled": true,
+            "lang": "en",
+            "contributors_enabled": false,
+            "is_translator": false,
+            "profile_background_color": "FA743E",
+            "profile_background_image_url": "http://pbs.twimg.com/profile_background_images/537664693918130176/DBfHz912.jpeg",
+            "profile_background_image_url_https": "https://pbs.twimg.com/profile_background_images/537664693918130176/DBfHz912.jpeg",
+            "profile_background_tile": true,
+            "profile_link_color": "FA743E",
+            "profile_sidebar_border_color": "FFFFFF",
+            "profile_sidebar_fill_color": "99CC33",
+            "profile_text_color": "3E4415",
+            "profile_use_background_image": true,
+            "profile_image_url": "http://pbs.twimg.com/profile_images/648180557117915136/ibPdx2Jp_normal.jpg",
+            "profile_image_url_https": "https://pbs.twimg.com/profile_images/648180557117915136/ibPdx2Jp_normal.jpg",
+            "profile_banner_url": "https://pbs.twimg.com/profile_banners/415294882/1443532643",
+            "default_profile": false,
+            "default_profile_image": false,
+            "following": null,
+            "follow_request_sent": null,
+            "notifications": null
+        },
+        "geo": null,
+        "coordinates": null,
+        "place": null,
+        "contributors": null,
+        "is_quote_status": false,
+        "retweet_count": 1,
+        "favorite_count": 0,
+        "entities": {
+            "hashtags": [],
+            "urls": [],
+            "user_mentions": [
+                {
+                    "screen_name": "ArvindKejriwal",
+                    "name": "Arvind Kejriwal",
+                    "id": 405427035,
+                    "id_str": "405427035",
+                    "indices": [
+                        9,
+                        24
+                    ]
+                },
+                {
+                    "screen_name": "narendramodi",
+                    "name": "Narendra Modi",
+                    "id": 18839785,
+                    "id_str": "18839785",
+                    "indices": [
+                        92,
+                        105
+                    ]
+                }
+            ],
+            "symbols": [],
+            "media": [
+                {
+                    "id": 650220795755675600,
+                    "id_str": "650220795755675648",
+                    "indices": [
+                        115,
+                        137
+                    ],
+                    "media_url": "http://pbs.twimg.com/media/CQYMXmSWwAAjfYc.jpg",
+                    "media_url_https": "https://pbs.twimg.com/media/CQYMXmSWwAAjfYc.jpg",
+                    "url": "http://t.co/hP55csEPAk",
+                    "display_url": "pic.twitter.com/hP55csEPAk",
+                    "expanded_url": "http://twitter.com/RamraoKP_/status/650220802328133632/photo/1",
+                    "type": "photo",
+                    "sizes": {
+                        "small": {
+                            "w": 340,
+                            "h": 260,
+                            "resize": "fit"
+                        },
+                        "thumb": {
+                            "w": 150,
+                            "h": 150,
+                            "resize": "crop"
+                        },
+                        "large": {
+                            "w": 720,
+                            "h": 551,
+                            "resize": "fit"
+                        },
+                        "medium": {
+                            "w": 600,
+                            "h": 459,
+                            "resize": "fit"
+                        }
+                    }
+                }
+            ]
+        },
+        "extended_entities": {
+            "media": [
+                {
+                    "id": 650220795755675600,
+                    "id_str": "650220795755675648",
+                    "indices": [
+                        115,
+                        137
+                    ],
+                    "media_url": "http://pbs.twimg.com/media/CQYMXmSWwAAjfYc.jpg",
+                    "media_url_https": "https://pbs.twimg.com/media/CQYMXmSWwAAjfYc.jpg",
+                    "url": "http://t.co/hP55csEPAk",
+                    "display_url": "pic.twitter.com/hP55csEPAk",
+                    "expanded_url": "http://twitter.com/RamraoKP_/status/650220802328133632/photo/1",
+                    "type": "photo",
+                    "sizes": {
+                        "small": {
+                            "w": 340,
+                            "h": 260,
+                            "resize": "fit"
+                        },
+                        "thumb": {
+                            "w": 150,
+                            "h": 150,
+                            "resize": "crop"
+                        },
+                        "large": {
+                            "w": 720,
+                            "h": 551,
+                            "resize": "fit"
+                        },
+                        "medium": {
+                            "w": 600,
+                            "h": 459,
+                            "resize": "fit"
+                        }
+                    }
+                },
+                {
+                    "id": 650220799270494200,
+                    "id_str": "650220799270494208",
+                    "indices": [
+                        115,
+                        137
+                    ],
+                    "media_url": "http://pbs.twimg.com/media/CQYMXzYWoAAjkXY.jpg",
+                    "media_url_https": "https://pbs.twimg.com/media/CQYMXzYWoAAjkXY.jpg",
+                    "url": "http://t.co/hP55csEPAk",
+                    "display_url": "pic.twitter.com/hP55csEPAk",
+                    "expanded_url": "http://twitter.com/RamraoKP_/status/650220802328133632/photo/1",
+                    "type": "photo",
+                    "sizes": {
+                        "thumb": {
+                            "w": 150,
+                            "h": 150,
+                            "resize": "crop"
+                        },
+                        "large": {
+                            "w": 720,
+                            "h": 589,
+                            "resize": "fit"
+                        },
+                        "small": {
+                            "w": 340,
+                            "h": 278,
+                            "resize": "fit"
+                        },
+                        "medium": {
+                            "w": 600,
+                            "h": 490,
+                            "resize": "fit"
+                        }
+                    }
+                }
+            ]
+        },
+        "favorited": false,
+        "retweeted": false,
+        "possibly_sensitive": false,
+        "filter_level": "low",
+        "lang": "en"
+    },
+    "is_quote_status": false,
+    "retweet_count": 0,
+    "favorite_count": 0,
+    "entities": {
+        "hashtags": [],
+        "urls": [],
+        "user_mentions": [
+            {
+                "screen_name": "RamraoKP_",
+                "name": "Ramrao Kulkarni",
+                "id": 415294882,
+                "id_str": "415294882",
+                "indices": [
+                    3,
+                    13
+                ]
+            },
+            {
+                "screen_name": "ArvindKejriwal",
+                "name": "Arvind Kejriwal",
+                "id": 405427035,
+                "id_str": "405427035",
+                "indices": [
+                    24,
+                    39
+                ]
+            },
+            {
+                "screen_name": "narendramodi",
+                "name": "Narendra Modi",
+                "id": 18839785,
+                "id_str": "18839785",
+                "indices": [
+                    107,
+                    120
+                ]
+            }
+        ],
+        "symbols": [],
+        "media": [
+            {
+                "id": 650220795755675600,
+                "id_str": "650220795755675648",
+                "indices": [
+                    139,
+                    140
+                ],
+                "media_url": "http://pbs.twimg.com/media/CQYMXmSWwAAjfYc.jpg",
+                "media_url_https": "https://pbs.twimg.com/media/CQYMXmSWwAAjfYc.jpg",
+                "url": "http://t.co/hP55csEPAk",
+                "display_url": "pic.twitter.com/hP55csEPAk",
+                "expanded_url": "http://twitter.com/RamraoKP_/status/650220802328133632/photo/1",
+                "type": "photo",
+                "sizes": {
+                    "small": {
+                        "w": 340,
+                        "h": 260,
+                        "resize": "fit"
+                    },
+                    "thumb": {
+                        "w": 150,
+                        "h": 150,
+                        "resize": "crop"
+                    },
+                    "large": {
+                        "w": 720,
+                        "h": 551,
+                        "resize": "fit"
+                    },
+                    "medium": {
+                        "w": 600,
+                        "h": 459,
+                        "resize": "fit"
+                    }
+                },
+                "source_status_id": 650220802328133600,
+                "source_status_id_str": "650220802328133632",
+                "source_user_id": 415294882,
+                "source_user_id_str": "415294882"
+            }
+        ]
+    },
+    "extended_entities": {
+        "media": [
+            {
+                "id": 650220795755675600,
+                "id_str": "650220795755675648",
+                "indices": [
+                    139,
+                    140
+                ],
+                "media_url": "http://pbs.twimg.com/media/CQYMXmSWwAAjfYc.jpg",
+                "media_url_https": "https://pbs.twimg.com/media/CQYMXmSWwAAjfYc.jpg",
+                "url": "http://t.co/hP55csEPAk",
+                "display_url": "pic.twitter.com/hP55csEPAk",
+                "expanded_url": "http://twitter.com/RamraoKP_/status/650220802328133632/photo/1",
+                "type": "photo",
+                "sizes": {
+                    "small": {
+                        "w": 340,
+                        "h": 260,
+                        "resize": "fit"
+                    },
+                    "thumb": {
+                        "w": 150,
+                        "h": 150,
+                        "resize": "crop"
+                    },
+                    "large": {
+                        "w": 720,
+                        "h": 551,
+                        "resize": "fit"
+                    },
+                    "medium": {
+                        "w": 600,
+                        "h": 459,
+                        "resize": "fit"
+                    }
+                },
+                "source_status_id": 650220802328133600,
+                "source_status_id_str": "650220802328133632",
+                "source_user_id": 415294882,
+                "source_user_id_str": "415294882"
+            },
+            {
+                "id": 650220799270494200,
+                "id_str": "650220799270494208",
+                "indices": [
+                    139,
+                    140
+                ],
+                "media_url": "http://pbs.twimg.com/media/CQYMXzYWoAAjkXY.jpg",
+                "media_url_https": "https://pbs.twimg.com/media/CQYMXzYWoAAjkXY.jpg",
+                "url": "http://t.co/hP55csEPAk",
+                "display_url": "pic.twitter.com/hP55csEPAk",
+                "expanded_url": "http://twitter.com/RamraoKP_/status/650220802328133632/photo/1",
+                "type": "photo",
+                "sizes": {
+                    "thumb": {
+                        "w": 150,
+                        "h": 150,
+                        "resize": "crop"
+                    },
+                    "large": {
+                        "w": 720,
+                        "h": 589,
+                        "resize": "fit"
+                    },
+                    "small": {
+                        "w": 340,
+                        "h": 278,
+                        "resize": "fit"
+                    },
+                    "medium": {
+                        "w": 600,
+                        "h": 490,
+                        "resize": "fit"
+                    }
+                },
+                "source_status_id": 650220802328133600,
+                "source_status_id_str": "650220802328133632",
+                "source_user_id": 415294882,
+                "source_user_id_str": "415294882"
+            }
+        ]
+    },
+    "favorited": false,
+    "retweeted": false,
+    "possibly_sensitive": false,
+    "filter_level": "low",
+    "lang": "en",
+    "timestamp_ms": "1443859879477"
+}

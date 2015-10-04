@@ -13,23 +13,12 @@ import akka.stream.scaladsl.Sink
 import akka.stream.scaladsl.Source
 import name.abhijitsarkar.scala.scauth.util.ActorPlumbing
 import name.abhijitsarkar.scala.scauth.api.OAuthRequest
+import name.abhijitsarkar.scala.scauth.api.OAuthService
 
-class SimpleOAuthService()(implicit val actorPlumbing: ActorPlumbing) extends OAuthService {
+class SimpleOAuthService[A]()(implicit val actorPlumbing: ActorPlumbing) extends OAuthService[A] {
   private val log = LoggerFactory.getLogger(getClass())
 
-  override def sendWithAuthorizationQueryParams[A](request: OAuthRequest)(implicit unmarshaller: Unmarshaller[ResponseEntity, A]) = {
-    val httpRequest = request.toHttpRequestWithAuthorizationQueryParams
-
-    sendAndReceive(httpRequest, request.signature)
-  }
-
-  override def sendWithAuthorizationHeader[A](request: OAuthRequest)(implicit unmarshaller: Unmarshaller[ResponseEntity, A]) = {
-    val httpRequest = request.toHttpRequestWithAuthorizationHeader
-
-    sendAndReceive(httpRequest, request.signature)
-  }
-
-  private def sendAndReceive[A](httpRequest: HttpRequest, id: String)(implicit unmarshaller: Unmarshaller[ResponseEntity, A]) = {
+  protected def sendAndReceive(httpRequest: HttpRequest, id: String)(implicit unmarshaller: Unmarshaller[ResponseEntity, A]) = {
     log.debug(s"Http request: {}.", httpRequest)
 
     import actorPlumbing._

@@ -1,9 +1,8 @@
-package name.abhijitsarkar.scala.scauth.example
+package name.abhijitsarkar.scala.scauth.service
 
 import akka.http.scaladsl.unmarshalling.PredefinedFromEntityUnmarshallers.stringUnmarshaller
 import name.abhijitsarkar.scala.scauth.model.OAuthCredentials
 import name.abhijitsarkar.scala.scauth.model.OAuthRequestConfig
-import name.abhijitsarkar.scala.scauth.service.SimpleOAuthService
 import name.abhijitsarkar.scala.scauth.util.ActorPlumbing
 import name.abhijitsarkar.scala.scauth.util.SimpleUrlEncoder
 import name.abhijitsarkar.scala.scauth.model.SimpleOAuthRequest
@@ -14,7 +13,7 @@ class TwitterSearchService(val oAuthCredentials: OAuthCredentials)(implicit val 
   private val resultLimit = "3"
 
   import actorPlumbing._
-  private val oAuthService = new SimpleOAuthService()
+  private val oAuthService = new SimpleOAuthService[String]()
 
   // Twitter search API - https://dev.twitter.com/rest/public/search
   // Various Twitter search parameters - https://dev.twitter.com/rest/reference/get/search/tweets
@@ -26,6 +25,6 @@ class TwitterSearchService(val oAuthCredentials: OAuthCredentials)(implicit val 
 
     val request = SimpleOAuthRequest(oAuthCredentials, oAuthRequestConfig)
 
-    oAuthService.sendWithAuthorizationHeader[String](request)
+    oAuthService.sendWithAuthorizationHeader(request)
   }
 }

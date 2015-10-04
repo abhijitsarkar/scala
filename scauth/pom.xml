@@ -21,6 +21,10 @@
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-http-experimental_2.11</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-http-spray-json-experimental_2.11</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>

@@ -1,4 +1,4 @@
-package name.abhijitsarkar.scala.scauth.example
+package name.abhijitsarkar.scala.scauth
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Success
@@ -7,6 +7,7 @@ import akka.stream.ActorMaterializer
 import name.abhijitsarkar.scala.scauth.model.OAuthCredentials
 import name.abhijitsarkar.scala.scauth.util.ActorPlumbing
 import scala.concurrent.ExecutionContext
+import name.abhijitsarkar.scala.scauth.service.TwitterSearchService
 
 object TwitterApp extends App {
   implicit val system = ActorSystem("twitter")
