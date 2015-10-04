@@ -16,14 +16,14 @@ class FibonacciSubscriber extends ActorSubscriber with ActorLogging {
 
   def receive = {
     case OnNext(fib: Long) =>
-      log.debug("Received Fibonacci number: {}", fib)
+      log.debug("Received Fibonacci number: {}.", fib)
 
       if (fib > 5000) self ! OnComplete
     case OnError(ex: Exception) =>
       log.error(ex, ex.getMessage)
       self ! OnComplete
     case OnComplete =>
-      log.info("Fibonacci stream completed.")
+      log.info("Stopping subscriber.")
       context.stop(self)
     case unknown => log.warning("Received unknown event: {}.", unknown)
   }

@@ -15,7 +15,7 @@ object FibonacciApp extends App {
   implicit val materializer = ActorMaterializer()
   implicit val executionContext: ExecutionContext = { implicitly }
 
-  val src = Source.actorPublisher(Props[FibonacciProducer])
+  val src = Source.actorPublisher(Props[FibonacciPublisher])
   val flow = Flow[Long].map { _ * 2 }
   val sink = Sink.actorSubscriber(Props[FibonacciSubscriber])
 

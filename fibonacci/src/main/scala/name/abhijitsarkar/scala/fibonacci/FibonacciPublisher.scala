@@ -7,7 +7,7 @@ import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage.Cancel
 import akka.stream.actor.ActorPublisherMessage.Request
 
-class FibonacciProducer extends ActorPublisher[Long] with ActorLogging {
+class FibonacciPublisher extends ActorPublisher[Long] with ActorLogging {
   private val queue = Queue[Long](0, 1)
 
   def receive = {
@@ -15,7 +15,7 @@ class FibonacciProducer extends ActorPublisher[Long] with ActorLogging {
       log.debug("Received request; demand = {}.", totalDemand)
       publish
     case Cancel =>
-      log.info("Stopping.")
+      log.info("Stopping publisher.")
       context.stop(self)
     case unknown => log.warning("Received unknown event: {}.", unknown)
   }
