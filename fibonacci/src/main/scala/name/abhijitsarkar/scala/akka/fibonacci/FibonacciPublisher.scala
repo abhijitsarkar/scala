@@ -1,4 +1,4 @@
-package name.abhijitsarkar.scala.fibonacci
+package name.abhijitsarkar.scala.akka.fibonacci
 
 import scala.collection.mutable.Queue
 

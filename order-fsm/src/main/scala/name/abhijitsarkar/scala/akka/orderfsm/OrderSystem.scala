@@ -1,4 +1,4 @@
-package name.abhijitsarkar.scala.orderfsm
+package name.abhijitsarkar.scala.akka.orderfsm
 
 import akka.actor.LoggingFSM
 import akka.actor.ActorLogging

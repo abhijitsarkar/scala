@@ -6,21 +6,17 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.OutgoingConnection
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.model.HttpResponse
-import akka.stream.scaladsl.Flow
-import akka.stream.scaladsl.Sink
 import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.Flow
 import name.abhijitsarkar.scala.scauth.model.OAuthCredentials
 import name.abhijitsarkar.scala.scauth.model.OAuthRequestConfig
 import name.abhijitsarkar.scala.scauth.model.SimpleOAuthRequest
 import name.abhijitsarkar.scala.scauth.util.ActorPlumbing
-import name.abhijitsarkar.scala.scauth.model.Tweet
-import name.abhijitsarkar.scala.scauth.model.TwitterUser
-import name.abhijitsarkar.scala.scauth.model.TwitterJsonSupport._
-import akka.stream.scaladsl.FlattenStrategy
-import java.nio.charset.StandardCharsets.UTF_8
-import akka.actor.Props
+import akka.stream.Graph
+import akka.stream.SinkShape
 
-class TwitterStreamingService(val oAuthCredentials: OAuthCredentials)(implicit val actorPlumbing: ActorPlumbing) {
+class TwitterStreamingService[T](val oAuthCredentials: OAuthCredentials,
+    val partial: Graph[SinkShape[HttpResponse], Unit])(implicit val actorPlumbing: ActorPlumbing) {
   private val log = LoggerFactory.getLogger(getClass())
 
   private val baseUri = "https://stream.twitter.com/1.1"
@@ -32,14 +28,9 @@ class TwitterStreamingService(val oAuthCredentials: OAuthCredentials)(implicit v
     val httpRequest = this.httpRequest { queryParams(follow, track) }
     val flow = this.flow { httpRequest }
 
-    val sink = Sink.actorSubscriber(Props[TwitterSubscriber])
+    val src = Source.single(httpRequest).via(flow)
 
-    Source.single(httpRequest)
-      .via(flow)
-      .map(_.entity.dataBytes)
-      .flatten(FlattenStrategy.concat) // flattens multiple sources into one
-      .map(b => parseTweet(b.decodeString(UTF_8.name)))
-      .runWith(sink)
+    src.runWith(partial)
   }
 
   private def queryParams(follow: Option[String], track: Option[String]) = {

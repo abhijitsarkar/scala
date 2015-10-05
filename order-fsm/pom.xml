@@ -8,7 +8,7 @@
 		<version>1.0</version>
 	</parent>
 
-	<groupId>name.abhijitsarkar.scala</groupId>
+	<groupId>name.abhijitsarkar.scala.akka</groupId>
 	<artifactId>order-fsm</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
