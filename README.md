@@ -36,3 +36,5 @@ My Scala projects
 [Working with Graphs](http://doc.akka.io/docs/akka-stream-and-http-experimental/current/scala/stream-graphs.html#Constructing_Flow_Graphs)
 
 [Modularity, Composition and Hierarchy](http://doc.akka.io/docs/akka-stream-and-http-experimental/current/scala/stream-composition.html)
+
+[Buffers and working with rate](http://doc.akka.io/docs/akka-stream-and-http-experimental/current/scala/stream-rate.html)
