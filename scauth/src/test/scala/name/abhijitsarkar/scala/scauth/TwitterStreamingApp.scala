@@ -2,20 +2,24 @@ package name.abhijitsarkar.scala.scauth
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
+
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.HttpResponse
 import akka.stream.ActorMaterializer
 import akka.stream.SinkShape
-import akka.stream.scaladsl.FlattenStrategy
+import akka.stream.UniformFanOutShape
+import akka.stream.scaladsl.Broadcast
 import akka.stream.scaladsl.Flow
 import akka.stream.scaladsl.FlowGraph
+import akka.stream.scaladsl.FlowGraph.Implicits.fanOut2flow
+import akka.stream.scaladsl.FlowGraph.Implicits.flow2flow
 import akka.stream.scaladsl.Sink
+import akka.util.ByteString
 import name.abhijitsarkar.scala.scauth.model.OAuthCredentials
 import name.abhijitsarkar.scala.scauth.model.Tweet
 import name.abhijitsarkar.scala.scauth.model.TwitterJsonSupport.parseTweet
+import name.abhijitsarkar.scala.scauth.service.TwitterStreamingService
 import name.abhijitsarkar.scala.scauth.service.TwitterSubscriber
 import name.abhijitsarkar.scala.scauth.util.ActorPlumbing
-import name.abhijitsarkar.scala.scauth.service.TwitterStreamingService
 
 object TwitterStreamingApp extends App {
   implicit val system = ActorSystem("twitter")
@@ -32,27 +36,36 @@ object TwitterStreamingApp extends App {
   val oAuthCredentials = OAuthCredentials(consumerKey, consumerSecret, Some(token), Some(tokenSecret))
   implicit val actorPlumbing: ActorPlumbing = ActorPlumbing()
 
-  val subscriber = Sink.actorSubscriber(TwitterSubscriber.props("subscriber"))
+  val beforeEpochSubscriber = Sink.actorSubscriber(TwitterSubscriber.props("BeforeEpoch"))
+  val afterEpochSubscriber = Sink.actorSubscriber(TwitterSubscriber.props("AfterEpoch"))
 
-  val allTweets = Flow[HttpResponse].map { _.entity.dataBytes }.flatten(FlattenStrategy.concat).map {
+  val tweetsFlow = Flow[ByteString].map {
     b => parseTweet(b.utf8String)
   }
 
-  //  val isAfterEpoch = (t: Tweet) => t.createdAt.getYear > 1970
-  //
-  //  val goodTweets = allTweets.filter { isAfterEpoch }.toMat(goodSubscriber)(Keep.right)
+  val isAfterEpoch = (t: Tweet) => t.createdAt.getYear > 1970
+
+  val beforeEpochTweets = Flow[Tweet].filter { isAfterEpoch }
 
   // The negation of isAfterEpoch is a function that applies isAfterEpoch to its argument and negates the result.
-  //  val badTweets = allTweets.filter { !isAfterEpoch(_) }.toMat(badSubscriber)(Keep.right)
+  val afterEpochTweets = Flow[Tweet].filter { !isAfterEpoch(_) }
 
-  //  val pub = Sink.fanoutPublisher[Tweet](1, 1)
+  // Good read: https://github.com/akka/akka/issues/18505
+  // val pub = Sink.fanoutPublisher[Tweet](1, 1)
 
   val partial = FlowGraph.partial() { implicit builder =>
     import FlowGraph.Implicits._
 
-    val sink = builder.add(allTweets.to(subscriber))
+    val broadcast = builder.add(Broadcast[Tweet](2))
 
-    SinkShape[HttpResponse](sink)
+    val rsvp = builder.add(tweetsFlow)
+
+    broadcast ~> beforeEpochTweets ~> beforeEpochSubscriber
+    broadcast ~> afterEpochTweets ~> afterEpochSubscriber
+
+    rsvp ~> broadcast
+
+    SinkShape(rsvp.inlet)
   }
 
   val twitterService = new TwitterStreamingService[Tweet](oAuthCredentials, partial)

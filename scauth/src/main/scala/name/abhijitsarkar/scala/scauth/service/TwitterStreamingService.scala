@@ -14,9 +14,11 @@ import name.abhijitsarkar.scala.scauth.model.SimpleOAuthRequest
 import name.abhijitsarkar.scala.scauth.util.ActorPlumbing
 import akka.stream.Graph
 import akka.stream.SinkShape
+import akka.stream.scaladsl.FlattenStrategy
+import akka.util.ByteString
 
 class TwitterStreamingService[T](val oAuthCredentials: OAuthCredentials,
-    val partial: Graph[SinkShape[HttpResponse], Unit])(implicit val actorPlumbing: ActorPlumbing) {
+    val partial: Graph[SinkShape[ByteString], Unit])(implicit val actorPlumbing: ActorPlumbing) {
   private val log = LoggerFactory.getLogger(getClass())
 
   private val baseUri = "https://stream.twitter.com/1.1"
@@ -28,7 +30,7 @@ class TwitterStreamingService[T](val oAuthCredentials: OAuthCredentials,
     val httpRequest = this.httpRequest { queryParams(follow, track) }
     val flow = this.flow { httpRequest }
 
-    val src = Source.single(httpRequest).via(flow)
+    val src = Source.single(httpRequest).via(flow).map { _.entity.dataBytes }.flatten(FlattenStrategy.concat)
 
     src.runWith(partial)
   }
