@@ -58,14 +58,14 @@ object TwitterStreamingApp extends App {
 
     val broadcast = builder.add(Broadcast[Tweet](2))
 
-    val rsvp = builder.add(tweetsFlow)
+    val tweets = builder.add(tweetsFlow)
 
     broadcast ~> beforeEpochTweets ~> beforeEpochSubscriber
     broadcast ~> afterEpochTweets ~> afterEpochSubscriber
 
-    rsvp ~> broadcast
+    tweets ~> broadcast
 
-    SinkShape(rsvp.inlet)
+    SinkShape(tweets.inlet)
   }
 
   val twitterService = new TwitterStreamingService[Tweet](oAuthCredentials, partial)

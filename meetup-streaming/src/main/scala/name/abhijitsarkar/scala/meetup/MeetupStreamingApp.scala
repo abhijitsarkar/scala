@@ -18,6 +18,7 @@ import name.abhijitsarkar.scala.meetup.util.ActorPlumbing
 import spray.json.pimpString
 import akka.util.ByteString
 import akka.stream.Graph
+import akka.stream.scaladsl.UnzipWith
 
 object MeetupStreamingApp extends App {
   implicit val system = ActorSystem("twitter")
@@ -29,25 +30,42 @@ object MeetupStreamingApp extends App {
   val firstSubscriber = Sink.actorSubscriber(RsvpSubscriber.props("first"))
   val secondSubscriber = Sink.actorSubscriber(RsvpSubscriber.props("second"))
 
-  val rsvpFlow: Flow[ByteString, Rsvp, Unit] = Flow[ByteString].map {
-    import name.abhijitsarkar.scala.meetup.model.RsvpJsonSupport._
-    import spray.json._
-
-    _.utf8String.parseJson.convertTo[Rsvp]
-  }
-
   val rsvpSink: Graph[SinkShape[ByteString], Unit] = FlowGraph.partial() { implicit builder =>
     import FlowGraph.Implicits._
-    val broadcast = builder.add(Broadcast[Rsvp](2))
 
-    val rsvp = builder.add(rsvpFlow)
+    val splitStream = builder.add(UnzipWith[ByteString, Rsvp, Rsvp] { byteStr =>
+      import model.RsvpJsonSupport._
+      import spray.json._
 
-    broadcast ~> firstSubscriber
-    broadcast ~> secondSubscriber
+      val rsvp = byteStr.utf8String.parseJson.convertTo[Rsvp]
 
-    rsvp ~> broadcast
+      (rsvp, rsvp)
+    })
 
-    SinkShape(rsvp.inlet)
+    /* Broadcast could be used too */
+
+    //  val rsvpFlow: Flow[ByteString, Rsvp, Unit] = Flow[ByteString].map {
+    //    import model.RsvpJsonSupport._
+    //    import spray.json._
+    //
+    //    _.utf8String.parseJson.convertTo[Rsvp]
+    //  }
+
+    //    val broadcast = builder.add(Broadcast[Rsvp](2))
+    //
+    //    val rsvp = builder.add(rsvpFlow)
+    //
+    //    broadcast ~> firstSubscriber
+    //    broadcast ~> secondSubscriber
+
+    //    rsvp ~> broadcast
+
+    //    SinkShape(rsvp.inlet)
+
+    splitStream.out0 ~> firstSubscriber
+    splitStream.out1 ~> secondSubscriber
+
+    SinkShape(splitStream.in)
   }
 
   val meetupStreamingService = new MeetupStreamingService(rsvpSink)
