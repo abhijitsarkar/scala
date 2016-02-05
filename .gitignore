@@ -1,6 +1,7 @@
-/target/
+target/
 /.cache
 /.settings
 /.classpath
 /.project
 /.worksheet
+.idea/
