@@ -4,6 +4,7 @@ import rx.Observable;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,8 +18,10 @@ import static java.util.stream.Collectors.groupingBy;
  * @author Abhijit Sarkar
  */
 public class Transformer {
-    public static void run(String path, String text, String fileFilter) {
-        Observable.from(files(path, fileFilter)).flatMap(p -> {
+    public static boolean run(String path, String text, String fileFilter) {
+        DirectoryStream<Path> files = files(path, fileFilter);
+
+        Observable.from(files).flatMap(p -> {
             try {
                 return Observable.from((Iterable<Map.Entry<String, List<String>>>) Files.lines(p)
                         .filter(line -> line.contains(text))
@@ -30,9 +33,17 @@ public class Transformer {
         })
                 .toBlocking()
                 .forEach(e -> System.out.printf("%s -> %s.%n", e.getKey(), e.getValue()));
+
+        try {
+            files.close();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        return true;
     }
 
-    private static Iterable<Path> files(String path, String fileFilter) {
+    private static DirectoryStream<Path> files(String path, String fileFilter) {
         try {
             return Files.newDirectoryStream(Paths.get(path), fileFilter);
         } catch (IOException e) {
