@@ -13,7 +13,7 @@ import scala.io.Codec.{ISO8859, UTF8}
 object NoaaClient {
   val basedir = new File(System.getProperty("java.io.tmpdir"), "current_conditions")
 
-  def currentConditionsUrl(overwrite: Boolean = false): String = {
+  def currentConditionsPath(overwrite: Boolean = false): String = {
     if ((basedir.exists()) && !overwrite) return basedir.getAbsolutePath
 
     basedir.delete() && basedir.mkdirs()
