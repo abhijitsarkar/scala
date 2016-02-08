@@ -1,0 +1,20 @@
+apply plugin: 'scala'
+apply from: 'https://raw.githubusercontent.com/abhijitsarkar/build-tools/master/gradle-common/build.gradle'
+
+group = 'name.abhijitsarkar.scala'
+version = '1.0-SNAPSHOT'
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.useAnt = false
+    scalaCompileOptions.additionalParameters = ["-feature"]
+    targetCompatibility = "1.8"
+}
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.11.7'
+    compile 'com.typesafe.akka:akka-stream-experimental_2.11:2.0.3'
+    compile 'io.reactivex:rxjava:1.1.0'
+    compile 'com.typesafe.akka:akka-actor_2.11:2.4.1'
+    testCompile 'org.scalatest:scalatest_2.11:2.2.6'
+    testCompile 'com.typesafe.akka:akka-testkit_2.11:2.4.1'
+}
