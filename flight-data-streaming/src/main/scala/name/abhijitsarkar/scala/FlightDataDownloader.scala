@@ -16,7 +16,9 @@ object FlightDataDownloader {
   val megabytes = 1024 * 1024
 
   def download(url: URL, out: File) = {
-    if (out.isFile || !out.canRead || !out.canExecute)
+    if (!out.exists)
+      out.mkdirs
+    else if (out.isFile || !out.canRead || !out.canExecute)
       Console.err.println(s"${out.getAbsolutePath} is not a directory or no rx permissions.")
 
     val file = url.getFile
