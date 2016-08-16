@@ -10,3 +10,5 @@ gradlew*
 *.iml
 build/
 gradle/
+*.log
+/.sbtserver*
