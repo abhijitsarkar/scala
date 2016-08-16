@@ -1,6 +1,6 @@
 import scalariform.formatter.preferences._
 
-name := """flight-delay"""
+name := """flight-data-streaming"""
 
 version := "1.0.0-SNAPSHOT"
 
