@@ -3,11 +3,6 @@ package name.abhijitsarkar.scala
 import java.io.File
 import java.net.URL
 
-/* Mostly copied from: https://github.com/rocketpages/flight_delay_akka_streams/blob/master/src/main/scala/sample/stream/FlightDelayStreaming.scala
-*
-* Blog here: https://medium.com/@kvnwbbr/diving-into-akka-streams-2770b3aeabb0#.fba5qsw4m
-*/
-
 object FlightDelayCalculator {
   val url = new URL("http://stat-computing.org/dataexpo/2009/2008.csv.bz2")
   val outfile = new File("/tmp/flight-data")
