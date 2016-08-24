@@ -1,24 +1,27 @@
 package name.abhijitsarkar.scala
 
 /**
- * @author Abhijit Sarkar
- */
+  * @author Abhijit Sarkar
+  */
 
-import java.io.{ BufferedInputStream, File, FileInputStream, FileOutputStream }
+import java.io._
 import java.net.URL
 import java.time.temporal.ChronoField._
 import java.time.temporal.ChronoUnit.SECONDS
-import java.time.{ Instant, LocalDateTime }
+import java.time.{Instant, LocalDateTime}
 
-import akka.stream.scaladsl.{ Flow, Keep, Sink, Source }
+import akka.Done
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{FileIO, Flow, Keep, Sink, Source}
+import akka.util.ByteString
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 
-import scala.sys.process._
-import scala.util.{ Random, Try }
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.{Random, Try}
 
 /**
- * @author Abhijit Sarkar
- */
+  * @author Abhijit Sarkar
+  */
 object Downloader {
   val megabytes = 1024 * 1024
 
@@ -38,7 +41,7 @@ object Downloader {
     .mapConcat(_.split("\\s").takeRight(1).toStream) // takeRight is empty safe :)
     .filter(s => randomYears.exists(_ == extractYear(s)))
 
-  def download(url: URL, out: File) = {
+  def download(url: URL, out: File)(implicit ec: ExecutionContext, materializer: ActorMaterializer) = {
     if (!out.exists) {
       out.mkdirs
     } else if (out.isFile || !out.canRead || !out.canExecute) {
@@ -53,22 +56,34 @@ object Downloader {
 
     val start = Instant.now
 
-    import scala.language.postfixOps // avoid deprecation warning
-    val exitStatus = url #> outfile !
+    //    import scala.language.postfixOps
+    // avoid deprecation warning
+    //    val exitStatus = url #> outfile !
 
-    val timeTaken = SECONDS.between(start, Instant.now)
+    val buffer = new Array[Byte](4096)
 
-    exitStatus match {
-      case 0 => {
-        println(s"Successfully downloaded: $url to: ${outfile.getAbsolutePath}.")
-        println(s"File size: ${outfile.length() / megabytes} MB.")
-        println(s"Time taken: $timeTaken seconds.")
+    val downloadResult = Source.unfoldResourceAsync[ByteString, InputStream](
+      () => Future(url.openConnection().getInputStream),
+      is => {
+        is.read(buffer) match {
+          case x if (x > -1) => Future(Some(ByteString.fromArray(buffer, 0, x)))
+          case _ => Future(None)
+        }
+      },
+      is => {
+        is.close()
+        Future(Done)
       }
-      case _ => {
-        if (outfile.exists) outfile.delete
-        throw new IllegalStateException(s"Failed to download from: $url after: $timeTaken seconds.")
-      }
-    }
+    )
+      .runWith(FileIO.toPath(outfile.toPath))
+
+    import scala.concurrent.duration._
+    Await.result(downloadResult, 2.minutes)
+
+    val timeTaken = java.time.temporal.ChronoUnit.SECONDS.between(start, Instant.now)
+
+    println(s"File size: ${outfile.length() / megabytes} MB.")
+    println(s"Time taken: $timeTaken seconds.")
 
     outfile
   }
@@ -117,6 +132,7 @@ object Downloader {
     outfile.getAbsolutePath
   }
 
-  def downloadAndExtract(inDir: String) =
-    urlSrc.via(outFiles).toMat(Sink.foreach(x => extract(download(new URL(s"${BASE_URL}$x"), new File(inDir)))))(Keep.right)
+  def downloadAndExtract(inDir: String)(implicit ec: ExecutionContext, materializer: ActorMaterializer) =
+    urlSrc.via(outFiles)
+      .toMat(Sink.foreachParallel(4)(x => extract(download(new URL(s"${BASE_URL}$x"), new File(inDir)))))(Keep.right)
 }
