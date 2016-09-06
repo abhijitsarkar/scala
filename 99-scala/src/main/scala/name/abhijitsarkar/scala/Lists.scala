@@ -198,7 +198,7 @@ object Lists {
     def internal(a: A, l: List[A], acc: List[A], packed: List[Any]): List[Any] = {
       l match {
         case Nil => packed :+ acc
-        case head :: tail if (head == a || acc == Nil) => internal(head, tail, acc :+ head, packed)
+        case head :: tail if (head == a || acc == Nil) => internal(head, tail, head :: acc, packed)
         case head :: tail => internal(head, tail, List(head), packed :+ acc)
       }
     }
@@ -213,7 +213,7 @@ object Lists {
   def packFold[A](l: List[A]) = {
     val packed = l.foldLeft((null.asInstanceOf[A], Nil.asInstanceOf[List[A]], Nil.asInstanceOf[List[Any]])) { (acc, elem) =>
       if (elem == acc._1 || acc._2 == Nil) // keeps accumulating dupes
-        (elem, acc._2 :+ elem, acc._3)
+        (elem, elem :: acc._2, acc._3)
       else
         (elem, List(elem), acc._3 :+ acc._2) // adds accumulated dupes to result and starts new dupes accumulator
     }
@@ -225,10 +225,173 @@ object Lists {
     * P10: Run-length encoding of a list.
     *
     */
-  def encode[A](l: List[A]) = {
+  def encodeFold[A](l: List[A]) = {
     packFold(l).map { x =>
       val elem = x.asInstanceOf[List[A]]
       (elem.size, elem.head)
     }
   }
+
+  /**
+    * P11: Modified run-length encoding.
+    *
+    */
+  def encodeModifiedFold[A](l: List[A]) = {
+    packFold(l).map {
+      _ match {
+        case head :: Nil => head
+        case head :: tail => (tail.size + 1, head)
+      }
+    }
+  }
+
+  /**
+    * P12: Decode a run-length encoded list.
+    *
+    */
+  def decode[A](encoded: List[Tuple2[Int, A]]) = {
+    encoded.flatMap { x =>
+      List.fill(x._1)(x._2)
+    }
+  }
+
+  /**
+    * P13: Run-length encoding of a list (direct solution).
+    *
+    */
+  def encodeDirectFold[A](l: List[A]) = {
+    val packed = l.foldLeft((null.asInstanceOf[A], 0, Nil.asInstanceOf[List[Tuple2[Int, A]]])) {
+      (acc, elem) =>
+        if (elem == acc._1 || acc._2 == 0) // keeps counting dupes
+          (elem, acc._2 + 1, acc._3)
+        else
+          (elem, 1, acc._3 :+ (acc._2, acc._1)) // adds accumulated dupes to result and starts new dupes counter
+    }
+
+    packed._3 :+ (packed._2, packed._1) // adds last tuple
+  }
+
+  /**
+    * P14: Duplicate the elements of a list.
+    *
+    */
+  def duplicateFold[A](l: List[A]) = l.flatMap(List.fill(2)(_))
+
+  /**
+    * P15: Duplicate the elements of a list a given number of times.
+    *
+    */
+  def duplicateNFold[A](n: Int, l: List[A]) = l.flatMap(List.fill(n)(_))
+
+  /**
+    * P16: Drop every Nth element from a list.
+    *
+    */
+  def dropFold[A](n: Int, l: List[A]) = {
+    l.foldLeft(1, Nil.asInstanceOf[List[A]]) { (acc, elem) =>
+      (acc._1 % n) match {
+        case 0 => (acc._1 + 1, acc._2)
+        case _ => (acc._1 + 1, acc._2 :+ elem)
+      }
+    }._2
+  }
+
+  /**
+    * P17: Split a list into two parts.
+    *
+    */
+  def splitFold[A](n: Int, l: List[A]) = {
+    val temp = l.foldLeft(1, Nil.asInstanceOf[List[A]], Nil.asInstanceOf[List[A]]) { (acc, elem) =>
+      (acc._1 <= n) match {
+        case true => (acc._1 + 1, acc._2 :+ elem, acc._3)
+        case _ => (acc._1 + 1, acc._2, acc._3 :+ elem)
+      }
+    }
+
+    (temp._2, temp._3)
+  }
+
+  /**
+    * P18: Extract a slice from a list.
+    *
+    */
+  def sliceFold[A](i: Int, k: Int, l: List[A]) = {
+    l.foldLeft(0, Nil.asInstanceOf[List[A]]) { (acc, elem) =>
+      if (acc._1 >= i && acc._1 < k)
+        (acc._1 + 1, acc._2 :+ elem)
+      else
+        (acc._1 + 1, acc._2)
+    }._2
+  }
+
+  /**
+    * P18: Extract a slice from a list.
+    *
+    */
+  def sliceDrop[A](i: Int, k: Int, l: List[A]) = l.drop(i).take(k - i)
+
+  def reverseSlice[A](i: Int, j: Int, l: List[A]) = {
+    val temp = l.foldLeft((0, Nil.asInstanceOf[List[A]], Nil.asInstanceOf[List[A]])) { (acc, elem) =>
+      if (acc._1 >= i && acc._1 <= j)
+        (acc._1 + 1, elem :: acc._2, acc._3)
+      else if (acc._1 > j)
+        (acc._1 + 1, Nil, acc._3 ++ acc._2 :+ elem)
+      else
+        (acc._1 + 1, acc._2, acc._3 :+ elem)
+    }
+
+    temp._3 ++ temp._2 // in case j is greater than last index
+  }
+
+  /**
+    * P19: Rotate a list N places to the left.
+    *
+    * Solution: The algorithm is adapted from "Programming Pearls" by "Jon Bentley".
+    *
+    * Given `i = 3` and `l = List('a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k)`,
+    * lets call the segment between indices `0` and `3` (exclusive) `A`,
+    * and the segment between indices `3` and `l.size` (exclusive) `B`.
+    * The rotation, then, is basically a transformation of `AB` to `BA`.
+    *
+    * Below, a reversal operation on a segment is indicated by superscript `r`.
+    *
+    * Step 1: `A`^r^`B` produces `List('c, 'b, 'a, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k)`
+    *
+    * Step 2: `A`^r^`B`^r^ produces `List('c, 'b, 'a, 'k, 'j, 'i, 'h, 'g, 'f, 'e, 'd)`
+    *
+    * Step 3: `(A`^r^`B`^r^`)`^r^ = `BA` produces `List('d, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'a, 'b, 'c)`
+    *
+    */
+  def rotate[A](i: Int, l: List[A]) = {
+    val length = l.size
+    val effectiveRotationDistance = if (i > 0) i else length - math.abs(i)
+
+    var temp = reverseSlice(0, effectiveRotationDistance - 1, l)
+    temp = reverseSlice(effectiveRotationDistance, length - 1, temp)
+    reverseSlice(0, length - 1, temp)
+  }
+
+  /**
+    * P19: Rotate a list N places to the left.
+    *
+    */
+  def rotateDrop[A](i: Int, l: List[A]) = {
+    val length = l.size
+    val effectiveRotationDistance = if (i > 0) i else length - math.abs(i)
+
+    l.drop(effectiveRotationDistance) ++ l.take(effectiveRotationDistance)
+  }
+
+  /**
+    * P20: Remove the Kth element from a list.
+    *
+    */
+  def removeAtDrop[A](i: Int, l: List[A]) = (l.take(i) ++ l.takeRight(l.size - i - 1), l.drop(i).head)
+
+  /**
+    * P20: Remove the Kth element from a list.
+    *
+    */
+  def removeAtSlice[A](i: Int, l: List[A]) = (sliceDrop(0, i, l) ++ sliceDrop(i + 1, l.size, l),
+    sliceDrop(i, i + 1, l).head)
 }
