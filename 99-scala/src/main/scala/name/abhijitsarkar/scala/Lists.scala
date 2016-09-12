@@ -1,6 +1,7 @@
 package name.abhijitsarkar.scala
 
 import scala.annotation.tailrec
+import scala.util.Random
 
 /**
   * @author Abhijit Sarkar
@@ -164,6 +165,8 @@ object Lists {
 
   /**
     * P08: Eliminate consecutive duplicates of list elements.
+    * If a list contains repeated elements they should be replaced with a single copy of the element.
+    * The order of the elements should not be changed.
     *
     */
   def compressTailrec[A](l: List[A]) = {
@@ -181,6 +184,8 @@ object Lists {
 
   /**
     * P08: Eliminate consecutive duplicates of list elements.
+    * If a list contains repeated elements they should be replaced with a single copy of the element.
+    * The order of the elements should not be changed.
     *
     */
   def compressFold[A](l: List[A]) = {
@@ -192,6 +197,7 @@ object Lists {
 
   /**
     * P09: Pack consecutive duplicates of list elements into sublists.
+    * If a list contains repeated elements they should be placed in separate sublists.
     *
     */
   def packTailrec[A](l: List[A]) = {
@@ -208,6 +214,7 @@ object Lists {
 
   /**
     * P09: Pack consecutive duplicates of list elements into sublists.
+    * If a list contains repeated elements they should be placed in separate sublists.
     *
     */
   def packFold[A](l: List[A]) = {
@@ -223,6 +230,9 @@ object Lists {
 
   /**
     * P10: Run-length encoding of a list.
+    * Use the result of problem P09 to implement the so-called run-length encoding data compression method.
+    * Consecutive duplicates of elements are encoded as tuples (N, E) where N is the number of duplicates
+    * of the element E.
     *
     */
   def encodeFold[A](l: List[A]) = {
@@ -234,6 +244,8 @@ object Lists {
 
   /**
     * P11: Modified run-length encoding.
+    * Modify the result of problem P10 in such a way that if an element has no duplicates it is simply copied
+    * into the result list. Only elements with duplicates are transferred as (N, E) terms.
     *
     */
   def encodeModifiedFold[A](l: List[A]) = {
@@ -247,6 +259,7 @@ object Lists {
 
   /**
     * P12: Decode a run-length encoded list.
+    * Given a run-length code list generated as specified in problem P10, construct its uncompressed version.
     *
     */
   def decode[A](encoded: List[Tuple2[Int, A]]) = {
@@ -257,6 +270,8 @@ object Lists {
 
   /**
     * P13: Run-length encoding of a list (direct solution).
+    * Implement the so-called run-length encoding data compression method directly.
+    * I.e. don't use other methods you've written (like P09's pack); do all the work directly.
     *
     */
   def encodeDirectFold[A](l: List[A]) = {
@@ -298,6 +313,26 @@ object Lists {
 
   /**
     * P17: Split a list into two parts.
+    * The length of the first part is given. Use a Tuple for your result.
+    *
+    */
+  def splitTailRec[A](i: Int, l: List[A]) = {
+    @tailrec
+    def loop(j: Int, left: List[A], right: List[A]): (List[A], List[A]) = {
+      if (j == i)
+        (left, right)
+      else
+        right match {
+          case Nil => (left, right)
+          case head :: tail => loop(j + 1, left :+ head, tail)
+        }
+    }
+    loop(0, Nil, l)
+  }
+
+  /**
+    * P17: Split a list into two parts.
+    * The length of the first part is given. Use a Tuple for your result.
     *
     */
   def splitFold[A](n: Int, l: List[A]) = {
@@ -313,6 +348,8 @@ object Lists {
 
   /**
     * P18: Extract a slice from a list.
+    * Given two indices, I and K, the slice is the list containing the elements from and including the Ith element
+    * up to but not including the Kth element of the original list. Start counting the elements with 0.
     *
     */
   def sliceFold[A](i: Int, k: Int, l: List[A]) = {
@@ -375,23 +412,101 @@ object Lists {
     * P19: Rotate a list N places to the left.
     *
     */
-  def rotateDrop[A](i: Int, l: List[A]) = {
+  def rotateSplit[A](i: Int, l: List[A]) = {
     val length = l.size
     val effectiveRotationDistance = if (i > 0) i else length - math.abs(i)
+    val temp = splitTailRec(effectiveRotationDistance, l)
 
-    l.drop(effectiveRotationDistance) ++ l.take(effectiveRotationDistance)
+    temp._2 ++ temp._1
   }
 
   /**
     * P20: Remove the Kth element from a list.
+    * Return the list and the removed element in a Tuple. Elements are numbered from 0.
     *
     */
-  def removeAtDrop[A](i: Int, l: List[A]) = (l.take(i) ++ l.takeRight(l.size - i - 1), l.drop(i).head)
+  def removeAtSplit[A](i: Int, l: List[A]) = {
+    val temp = splitTailRec(i, l)
+    (temp._1 ++ temp._2.tail, temp._2.head)
+  }
 
   /**
     * P20: Remove the Kth element from a list.
+    * Return the list and the removed element in a Tuple. Elements are numbered from 0.
     *
     */
   def removeAtSlice[A](i: Int, l: List[A]) = (sliceDrop(0, i, l) ++ sliceDrop(i + 1, l.size, l),
     sliceDrop(i, i + 1, l).head)
+
+  /**
+    * P21: Insert an element at a given position into a list.
+    *
+    */
+  def insertAtSplit[A](a: A, i: Int, l: List[A]) = {
+    val temp = splitTailRec(i, l)
+    temp._1 ++ (a +: temp._2)
+  }
+
+  /**
+    * P22: Create a list containing all integers within a given range.
+    *
+    */
+  def rangeTailRec(i: Int, j: Int) = {
+    @tailrec
+    def loop(k: Int, l: List[Int]): List[Int] = {
+      if (k >= i)
+        loop(k - 1, k :: l)
+      else
+        l
+    }
+    loop(j, Nil)
+  }
+
+  /**
+    * Fisher–Yates shuffle. https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+    */
+  def shuffle[A](i: Int, j: Int) = {
+    val arr = (i to j).toArray
+
+    val n = j - i + 1
+    for (k <- 0 to n - 2) {
+      // k <= rand < n - k
+      val rand = Random.nextInt(n - k) + k
+
+      val temp = arr(k)
+      arr(k) = arr(rand)
+      arr(rand) = temp
+    }
+    arr
+  }
+
+  /**
+    * P23: Extract a given number of randomly selected elements from a list.
+    *
+    */
+  def randomSelect[A](i: Int, l: List[A]) = {
+    val s = shuffle(0, l.size - 1)
+    val indices = s.take(i)
+
+    //    l.view.zipWithIndex.filter(x => indices.contains(x._2)).map(_._1)
+
+    indices.map(removeAtSplit(_, l)._2).toList
+  }
+
+  /**
+    * P24: Draw N different random numbers from the set 1..M.
+    *
+    */
+  def lotto(N: Int, M: Int) = {
+    val range = rangeTailRec(1, M)
+    randomSelect(N, range)
+  }
+
+  /**
+    * P25: Generate a random permutation of the elements of a list.
+    *
+    */
+  def randomPermute[A](l: List[A]) = {
+    randomSelect(l.size, l)
+  }
 }
