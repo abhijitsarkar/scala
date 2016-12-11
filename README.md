@@ -5,6 +5,12 @@ My Scala projects
 
 [Typesafe Examples](https://github.com/typesafehub)
 
+[Scala Exercises](https://www.scala-exercises.org/)
+
+[herding cats](http://eed3si9n.com/herding-cats/)
+
+[Cats Data Types](http://typelevel.org/cats/datatypes/state.html)
+
 ### People Doing Good Work
 
 [Raymond Roestenburg](https://github.com/RayRoestenburg)
