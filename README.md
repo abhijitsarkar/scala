@@ -15,7 +15,11 @@ My Scala projects
 
 [Functors, Applicatives, And Monads In Pictures](http://adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html)
 
+[Three Useful Monads](http://adit.io/posts/2013-06-10-three-useful-monads.html)
+
 [Scala Constructor Parameters' Visibility](http://stackoverflow.com/questions/14694712/do-scala-constructor-parameters-default-to-private-val)
+
+[Functors, Monads, Applicatives – can be so simple](https://thedet.wordpress.com/2012/04/28/functors-monads-applicatives-can-be-so-simple)
 
 [For Comprehension](http://docs.scala-lang.org/tutorials/FAQ/yield.html)
 
